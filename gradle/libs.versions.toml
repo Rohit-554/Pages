@@ -7,7 +7,7 @@ junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 lifecycleRuntimeKtx = "2.8.6"
 activityCompose = "1.9.3"
-composeBom = "2024.04.01"
+composeBom = "2024.10.00"
 gson = "2.10.1"
 hiltAndroidCompiler = "2.48"
 
@@ -15,13 +15,17 @@ kotlinxSerializationJson = "1.7.1"
 
 materialIconsExtended = "1.7.3"
 navigationCompose = "2.8.2"
+navigationComposeVersion = "2.8.3"
 roomCompiler = "2.6.1"
 roomRuntime = "2.6.1"
 uiTextGoogleFonts = "1.7.3"
 org-jetbrains-kotlin-android = "1.8.0"
+uiTextGoogleFontsVersion = "1.7.4"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-navigation-compose-v283 = { module = "androidx.navigation:navigation-compose", version.ref = "navigationComposeVersion" }
+androidx-ui-text-google-fonts-v174 = { module = "androidx.compose.ui:ui-text-google-fonts", version.ref = "uiTextGoogleFontsVersion" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycleRuntimeKtx" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleRuntimeKtx" }

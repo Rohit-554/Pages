@@ -43,7 +43,7 @@ android {
 }
 
 dependencies {
-
+    val nav_version = "2.8.3"
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -78,8 +78,12 @@ dependencies {
     kapt(libs.androidx.room.compiler)
     implementation (libs.androidx.room.ktx)
 
+    // Jetpack Compose integration
+    implementation(libs.androidx.navigation.compose.v283)
     //Google Fonts
-    implementation("androidx.compose.ui:ui-text-google-fonts:1.7.4")
+    implementation(libs.androidx.ui.text.google.fonts.v174)
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+    implementation ("androidx.compose.material:material-icons-extended:1.7.4")
 
 }
 

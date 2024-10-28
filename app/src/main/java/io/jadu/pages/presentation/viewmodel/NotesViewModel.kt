@@ -25,6 +25,10 @@ class NotesViewModel @Inject constructor(
     private val updateNotesPositionUseCase: UpdateNotesPositionUseCase
 ):ViewModel() {
 
+    init {
+        getNotesPaginated(10,0)
+    }
+
     private val _notes = MutableStateFlow<List<Notes>>(emptyList())
     val notes: StateFlow<List<Notes>> get() = _notes
 
