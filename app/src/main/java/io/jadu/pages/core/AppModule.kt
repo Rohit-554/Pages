@@ -10,6 +10,11 @@ import io.jadu.pages.data.dao.NotesDao
 import io.jadu.pages.data.local.NotesDatabase
 import io.jadu.pages.data.repository.NotesRepositoryImpl
 import io.jadu.pages.domain.repository.NotesRepository
+import io.jadu.pages.domain.usecase.AddNoteUseCase
+import io.jadu.pages.domain.usecase.DeleteNotesUseCase
+import io.jadu.pages.domain.usecase.GetNotesPaginatedUseCase
+import io.jadu.pages.domain.usecase.UpdateNotesPositionUseCase
+import io.jadu.pages.domain.usecase.UpdateNotesUseCase
 import javax.inject.Singleton
 
 
@@ -38,29 +43,28 @@ class AppModule {
     }
 
     @Provides
-    fun provideAddNoteUseCase(repository: NotesRepository): AddTaskUseCase {
-        return AddTaskUseCase(repository)
+    fun provideAddNoteUseCase(repository: NotesRepository): AddNoteUseCase {
+        return AddNoteUseCase(repository)
     }
 
     @Provides
-    fun provideUpdateNoteUseCase(repository: TaskRepository): UpdateTaskUseCase {
-        return UpdateTaskUseCase(repository)
+    fun provideUpdateNoteUseCase(repository: NotesRepository): UpdateNotesUseCase {
+        return UpdateNotesUseCase(repository)
     }
 
     @Provides
-    fun provideDeleteNoteUseCase(repository: TaskRepository): DeleteTaskUseCase {
-        return DeleteTaskUseCase(repository)
+    fun provideDeleteNoteUseCase(repository: NotesRepository): DeleteNotesUseCase {
+        return DeleteNotesUseCase(repository)
     }
 
     @Provides
-    fun provideGetNotesUseCase(repository: TaskRepository): GetTasksUseCase {
-        return GetTasksUseCase(repository)
+    fun provideGetNotesUseCase(repository: NotesRepository): GetNotesPaginatedUseCase {
+        return GetNotesPaginatedUseCase(repository)
     }
 
     @Provides
-    fun provideReorderNotesUseCase(repository: TaskRepository): ReorderTasksUseCase {
-        return ReorderTasksUseCase(repository)
+    fun provideReorderNotesUseCase(repository: NotesRepository): UpdateNotesPositionUseCase {
+        return UpdateNotesPositionUseCase(repository)
     }
-
 
 }

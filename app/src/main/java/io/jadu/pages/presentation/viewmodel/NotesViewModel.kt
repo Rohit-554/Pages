@@ -32,8 +32,8 @@ class NotesViewModel @Inject constructor(
         addNotesUseCase.invoke(note)
     }
 
-    fun updateNotes(title: String, description: String?, imageUri: String?, notesId: Long) = viewModelScope.launch {
-        updateNotesUseCase.invoke(title, description, imageUri, notesId)
+    fun updateNotes(title: String, description: String?, imageUri: String?, notesId: Long, color:String?) = viewModelScope.launch {
+        updateNotesUseCase.invoke(title, description, imageUri, notesId,color)
     }
 
     fun deleteNotes(noteId: Long) = viewModelScope.launch {

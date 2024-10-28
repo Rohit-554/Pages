@@ -78,7 +78,9 @@ dependencies {
     kapt(libs.androidx.room.compiler)
     implementation (libs.androidx.room.ktx)
 
-//    implementation (libs.gson)
+    //Google Fonts
+    implementation("androidx.compose.ui:ui-text-google-fonts:1.7.4")
+
 }
 
 kapt {
