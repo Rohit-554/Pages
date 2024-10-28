@@ -40,7 +40,7 @@ import io.jadu.pages.ui.theme.ButtonBlue
 import io.jadu.pages.ui.theme.LightGray
 
 @Composable
-fun EditPageBottomAppBar() {
+fun EditPageBottomAppBar(onImagePickClick : () -> Unit, onColorPickClick : () -> Unit) {
     var isExpanded by remember { mutableStateOf(false) }
     Box(
         contentAlignment = Alignment.CenterEnd,
@@ -60,12 +60,16 @@ fun EditPageBottomAppBar() {
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     CustomFab(
-                        onClick = {},
+                        onClick = {
+                            onImagePickClick()
+                        },
                         icon = Icons.Filled.Image,
                         contentDescription = "Camera",
                     )
                     CustomFab(
-                        onClick = {},
+                        onClick = {
+                            onColorPickClick()
+                        },
                         icon = Icons.Filled.ColorLens,
                         contentDescription = "Edit",
                     )
