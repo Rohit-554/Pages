@@ -66,6 +66,7 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController) {
     val limit = 15
     var isLoading by remember { mutableStateOf(false) }
     val notePositions = remember { mutableStateListOf<Rect>() }
+    val selectedNotes by remember { mutableStateOf(mutableSetOf<Notes>()) }
     LaunchedEffect(key1 = notes) {
         Log.d("HomePagereload", "Notes: $notes")
         viewModel.getNotesPaginated(limit, offset)
@@ -79,6 +80,23 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController) {
             viewModel.swapNotes(index1, index2)
         }
     }
+
+    fun handleLongPress(note: Notes) {
+        if (selectedNotes.contains(note)) {
+            selectedNotes.remove(note)
+        } else {
+            selectedNotes.add(note)
+        }
+    }
+
+    // Function to delete selected notes
+    fun deleteSelectedNotes() {
+        selectedNotes.forEach { note ->
+            viewModel.deleteNotes(note.id) // Call ViewModel to delete
+        }
+        selectedNotes.clear() // Clear the selection after deletion
+    }
+
 
     Scaffold(
         topBar = {
@@ -120,9 +138,11 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController) {
                                 onSwapNotes = { draggedNote, targetNote ->
                                     swapNotes(draggedNote, targetNote)
                                 },
+                                onLongPress = { handleLongPress(note) }, // Pass long press handler
                                 modifier = Modifier.fillMaxWidth(),
                                 navHostController = navHostController,
-                                notePositions = notePositions
+                                notePositions = notePositions,
+                                isSelected = selectedNotes.contains(note) // Highlight based on selection
                             )
                         }
                     }

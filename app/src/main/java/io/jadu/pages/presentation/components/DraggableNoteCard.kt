@@ -1,6 +1,8 @@
 package io.jadu.pages.presentation.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.Composable
@@ -12,6 +14,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.IntOffset
 import androidx.navigation.NavHostController
@@ -24,9 +27,11 @@ fun DraggableNoteCard(
     note: Notes,
     notes: List<Notes>,
     onSwapNotes: (Notes, Notes) -> Unit,
+    onLongPress: (Notes) -> Unit,
     modifier: Modifier = Modifier,
     navHostController: NavHostController,
     notePositions: SnapshotStateList<Rect>,
+    isSelected: Boolean
 ) {
     var offsetX by remember { mutableStateOf(0f) }
     var offsetY by remember { mutableStateOf(0f) }
@@ -53,7 +58,7 @@ fun DraggableNoteCard(
                         offsetY = 0f
                     },
                     onDrag = { change, dragAmount ->
-                        change.consume()
+                        change.consume() // Consume the drag change
                         offsetX += dragAmount.x
                         offsetY += dragAmount.y
 
@@ -65,8 +70,15 @@ fun DraggableNoteCard(
                         }
                     }
                 )
+
+                detectTapGestures(
+                    onLongPress = {
+                        onLongPress(note)
+                    }
+                )
             }
+            .background(if (isSelected) Color.LightGray else Color.Transparent)
     ) {
-        NoteCard(note = note, navHostController = navHostController)
+        NoteCard(note = note, navHostController = navHostController, onLongPress = {})
     }
 }

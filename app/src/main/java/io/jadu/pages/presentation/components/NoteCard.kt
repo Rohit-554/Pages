@@ -1,8 +1,11 @@
 package io.jadu.pages.presentation.components
 
 import android.util.Log
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,6 +22,7 @@ import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -36,17 +40,21 @@ import io.jadu.pages.presentation.screens.stringToUri
 import io.jadu.pages.ui.theme.LightGray
 import java.util.Locale
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun NoteCard(note: Notes, navHostController: NavHostController) {
+fun NoteCard(note: Notes, navHostController: NavHostController,onLongPress : (Notes) -> Unit) {
     val screenHeight = LocalConfiguration.current.screenHeightDp
-    val hasImage = note.imageUri != null && note.imageUri!!.isNotEmpty()
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(max = screenHeight.dp / 3)
-            .clickable {
-                navHostController.navigate("note/${note.id}")
-            },
+            .combinedClickable (
+                onClick = { navHostController.navigate("note/${note.id}")},
+                onLongClick = {
+                   onLongPress(note)
+                },
+            )
+        ,
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(
             containerColor = note.color?.let { parseColor(it) } ?: LightGray
