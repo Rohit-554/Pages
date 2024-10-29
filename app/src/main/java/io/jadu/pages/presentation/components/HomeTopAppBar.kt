@@ -15,7 +15,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
+import io.jadu.pages.core.PreferencesManager
 import io.jadu.pages.ui.theme.White
 import java.lang.reflect.Modifier
 
@@ -24,13 +26,15 @@ import java.lang.reflect.Modifier
 fun HomeTopAppBar(
     onSearchClick: () -> Unit,
     onMenuClick: () -> Unit,
-    onSearchTextChange: (String) -> Unit, // Callback to pass searchText
+    onSearchTextChange: (String) -> Unit,
     title: String = "Hi Rohit!",
     isHome: Boolean = true
 ) {
     var isSearchMode by remember { mutableStateOf(false) }
     var searchText by remember { mutableStateOf("") }
-
+    val context = LocalContext.current
+    val preferencesManager = remember { PreferencesManager(context) }
+    var name by remember { mutableStateOf(preferencesManager.getName() ?: "Master") }
     TopAppBar(
         title = {
             if (isSearchMode) {
@@ -56,7 +60,7 @@ fun HomeTopAppBar(
                 )
             } else {
                 Text(
-                    text = title,
+                    text = "Hi! ${name}",
                     style = TextStyle(
                         fontFamily = MaterialTheme.typography.bodyLarge.fontFamily,
                         fontSize = MaterialTheme.typography.titleLarge.fontSize

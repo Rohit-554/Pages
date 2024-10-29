@@ -5,11 +5,12 @@ package io.jadu.pages.presentation.navigation
         Todo,
         EditNotes,
         CreateNotes,
+        ProfilePage
     }
     sealed class NavigationItem(val route: String) {
         object Home : NavigationItem(Screen.Notes.name)
         object Todo : NavigationItem(Screen.Todo.name)
         object EditNotes : NavigationItem(Screen.EditNotes.name)
         object CreateNotes : NavigationItem(Screen.CreateNotes.name)
-        object TimeUpScreen : NavigationItem("time_up_screen/{timerId}/{time}")
+        object ProfilePage : NavigationItem(Screen.ProfilePage.name)
     }

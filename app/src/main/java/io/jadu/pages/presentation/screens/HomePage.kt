@@ -15,7 +15,6 @@ import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.CircularProgressIndicator
@@ -131,7 +130,7 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController) {
         if(isMenuExpanded){
             Box(modifier = Modifier.padding(innerPadding).fillMaxSize(), contentAlignment = Alignment.TopEnd) {
                 // Show options when the FAB is expanded
-                FloatingActionMenu(isMenuExpanded) { isMenuExpanded = false}
+                FloatingActionMenu(isMenuExpanded,navHostController) { isMenuExpanded = false}
             }
         }
         Column(
@@ -215,7 +214,11 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController) {
 }
 
 @Composable
-fun FloatingActionMenu(isMenuExpanded: Boolean, onDismiss: () -> Unit) {
+fun FloatingActionMenu(
+    isMenuExpanded: Boolean,
+    navHostController: NavHostController,
+    onDismiss: () -> Unit
+) {
     Column(
         horizontalAlignment = Alignment.End,
         modifier = Modifier.padding(16.dp)
@@ -227,7 +230,7 @@ fun FloatingActionMenu(isMenuExpanded: Boolean, onDismiss: () -> Unit) {
             DropdownMenuItem(
                 text = { Text("Profile", style = MaterialTheme.typography.bodyLarge) },
                 onClick = {
-                    Log.d("FloatingActionMenu", "Clicked on Delete")
+                    navHostController.navigate(NavigationItem.ProfilePage.route)
                     onDismiss()
                 },
                 leadingIcon = {
@@ -236,7 +239,6 @@ fun FloatingActionMenu(isMenuExpanded: Boolean, onDismiss: () -> Unit) {
                         contentDescription = "Profile",
                         tint = MaterialTheme.colorScheme.onSurface
                     )
-
                 }
             )
             DropdownMenuItem(

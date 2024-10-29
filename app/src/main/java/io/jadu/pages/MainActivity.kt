@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -41,6 +42,7 @@ import io.jadu.pages.domain.model.BottomNavigationItem
 import io.jadu.pages.presentation.components.BottomNavigationBar
 import io.jadu.pages.presentation.navigation.NavigationItem
 import io.jadu.pages.presentation.screens.HomePage
+import io.jadu.pages.presentation.screens.ProfilePage
 import io.jadu.pages.presentation.screens.TodoPage
 import io.jadu.pages.presentation.viewmodel.NotesViewModel
 import io.jadu.pages.presentation.viewmodel.TodoViewModel
@@ -98,6 +100,10 @@ fun AppNavHost(
         ) { navBackStackEntry ->
             val nodeId = navBackStackEntry.arguments?.getLong("nodeId")
             AddNewPage(viewModel, navHostController, nodeId)
+        }
+
+        composable(NavigationItem.ProfilePage.route) {
+            ProfilePage(PaddingValues(8.dp),navHostController)
         }
     }
 
