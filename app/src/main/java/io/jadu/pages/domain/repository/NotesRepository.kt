@@ -11,4 +11,5 @@ interface NotesRepository {
     suspend fun updateNotes(title: String, description: String?, imageUri: String?, notesId:Long, color: String?)
     suspend fun deleteNotes(noteId: Long)
     suspend fun updateNotesPosition(id: Long, position: Int)
+    suspend fun searchNotes(searchText: String): Flow<List<Notes>>
 }

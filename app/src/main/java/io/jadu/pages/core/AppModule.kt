@@ -16,6 +16,7 @@ import io.jadu.pages.domain.repository.TodoRepository
 import io.jadu.pages.domain.usecase.AddNoteUseCase
 import io.jadu.pages.domain.usecase.DeleteNotesUseCase
 import io.jadu.pages.domain.usecase.GetNotesPaginatedUseCase
+import io.jadu.pages.domain.usecase.SearchNoteUseCase
 import io.jadu.pages.domain.usecase.UpdateNotesPositionUseCase
 import io.jadu.pages.domain.usecase.UpdateNotesUseCase
 import io.jadu.pages.domain.usecase.todoUseCases.AddTodoUseCase
@@ -74,6 +75,11 @@ class AppModule {
         return UpdateNotesPositionUseCase(repository)
     }
 
+    @Provides
+    @Singleton
+    fun searchNoteUseCase(repository: NotesRepository): SearchNoteUseCase {
+        return SearchNoteUseCase(repository)
+    }
     //Todos
 
     @Provides
@@ -110,5 +116,7 @@ class AppModule {
     fun provideGetAllTodosUseCase(repository: TodoRepository): GetAllTodosUseCase {
         return GetAllTodosUseCase(repository)
     }
+
+
 
 }

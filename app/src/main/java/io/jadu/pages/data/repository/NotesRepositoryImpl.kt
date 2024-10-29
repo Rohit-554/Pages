@@ -29,4 +29,8 @@ class NotesRepositoryImpl @Inject constructor(
         notesDao.updateNotesPosition(id, position)
     }
 
+    override suspend fun searchNotes(searchText: String): Flow<List<Notes>> {
+        return notesDao.searchNotes(searchText)
+    }
+
 }

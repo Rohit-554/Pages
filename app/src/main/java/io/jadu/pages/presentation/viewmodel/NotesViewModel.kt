@@ -1,6 +1,7 @@
 package io.jadu.pages.presentation.viewmodel
 
 import android.provider.ContactsContract.CommonDataKinds.Note
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -8,6 +9,7 @@ import io.jadu.pages.domain.model.Notes
 import io.jadu.pages.domain.usecase.AddNoteUseCase
 import io.jadu.pages.domain.usecase.DeleteNotesUseCase
 import io.jadu.pages.domain.usecase.GetNotesPaginatedUseCase
+import io.jadu.pages.domain.usecase.SearchNoteUseCase
 import io.jadu.pages.domain.usecase.UpdateNotesPositionUseCase
 import io.jadu.pages.domain.usecase.UpdateNotesUseCase
 import kotlinx.coroutines.flow.Flow
@@ -23,7 +25,8 @@ class NotesViewModel @Inject constructor(
     private val updateNotesUseCase: UpdateNotesUseCase,
     private val deleteNotesUseCase: DeleteNotesUseCase,
     private val getNotesPaginatedUseCase: GetNotesPaginatedUseCase,
-    private val updateNotesPositionUseCase: UpdateNotesPositionUseCase
+    private val updateNotesPositionUseCase: UpdateNotesPositionUseCase,
+    private val searchNotesUseCase: SearchNoteUseCase
 ) : ViewModel() {
 
     /* init {
@@ -34,6 +37,9 @@ class NotesViewModel @Inject constructor(
     private val limit = 10
     private val _notes = MutableStateFlow<List<Notes>>(emptyList())
     val notes: StateFlow<List<Notes>> get() = _notes
+
+    private val _updatedNotes = MutableStateFlow<List<Notes>>(emptyList())
+    val updatedNotes: StateFlow<List<Notes>> get() = _updatedNotes
 
     fun addNotes(note: Notes) = viewModelScope.launch {
         addNotesUseCase.invoke(note)
@@ -53,6 +59,13 @@ class NotesViewModel @Inject constructor(
     fun deleteNotes(noteId: Long) = viewModelScope.launch {
         deleteNotesUseCase.invoke(noteId)
         _notes.value = _notes.value.filter { it.id != noteId }
+    }
+
+    fun searchNotes(searchText: String) = viewModelScope.launch {
+        Log.d("SearchText", "SearchText: $searchText")
+        searchNotesUseCase.invoke(searchText).collect { newNotes ->
+            _notes.value = newNotes
+        }
     }
 
     fun updateNotesPosition(id: Long, position: Int) = viewModelScope.launch {

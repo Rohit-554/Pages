@@ -1,6 +1,7 @@
 package io.jadu.pages.presentation.screens
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -153,10 +154,13 @@ fun TodoPage(todoViewModel: TodoViewModel, navHostController: NavHostController)
         Scaffold(
             topBar = {
                 HomeTopAppBar(
-                    onSearchClick = { },
-                    onMenuClick = {},
+                    onSearchClick = {},
+                    onMenuClick = {
+
+                    },
                     title = "To-dos",
-                    isHome = false
+                    isHome = false,
+                    onSearchTextChange = { searchText -> }
                 )
             },
             floatingActionButton = {
@@ -169,22 +173,38 @@ fun TodoPage(todoViewModel: TodoViewModel, navHostController: NavHostController)
             }
         ) { padding ->
             Column(
-                Modifier.padding(padding)
+                Modifier.padding(padding).padding(horizontal = 4.dp)
             ) {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize().padding(8.dp)
-                ) {
-                    todos.value.forEach {
-                        item {
-                            TodoListItem(todoText = it.task.toString(), isTaskCompleted = it.isTaskCompleted,
-                                onClick = {
-                                    todoViewModel.updateTodo(
-                                        it.copy(isTaskCompleted = !it.isTaskCompleted,)
-                                    )
-                                },
-                                viewModel = todoViewModel,
-                                id = it.id
-                            )
+                if(todos.value.isEmpty()){
+                    Column(
+                        Modifier.fillMaxSize().padding(horizontal = 8.dp),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "      No To-dos 🤒, Click the + Icon to get started",
+                            style = MaterialTheme.typography.bodyLarge,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                    }
+                }else{
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize().padding(8.dp)
+                    ) {
+                        todos.value.forEach {
+                            item {
+                                TodoListItem(
+                                    todoText = it.task.toString(),
+                                    isTaskCompleted = it.isTaskCompleted,
+                                    onClick = {
+                                        todoViewModel.updateTodo(
+                                            it.copy(isTaskCompleted = !it.isTaskCompleted,)
+                                        )
+                                    },
+                                    viewModel = todoViewModel,
+                                    id = it.id
+                                )
+                            }
                         }
                     }
                 }

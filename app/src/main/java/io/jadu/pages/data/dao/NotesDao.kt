@@ -22,9 +22,13 @@ interface NotesDao {
     @Query("UPDATE notes SET title = :title, description = :description, imageUri = :imageUri, color = :color  WHERE id = :notesId")
     suspend fun updateNotes(notesId: Long, title: String, description: String?, imageUri: String?, color: String?)
 
-    @Query("DELETE FROM notes WHERE date = :noteId")
+    @Query("DELETE FROM notes WHERE id = :noteId")
     suspend fun deleteNote(noteId: Long)
 
     @Query("UPDATE notes SET position = :position WHERE id = :id")
     suspend fun updateNotesPosition(id: Long, position: Int)
+
+    @Query("SELECT * FROM notes WHERE title LIKE '%' || :searchText || '%' OR description LIKE '%' || :searchText || '%'")
+    fun searchNotes(searchText: String): Flow<List<Notes>>
+
 }

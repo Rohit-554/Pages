@@ -12,8 +12,10 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.outlined.AutoStories
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -113,8 +115,8 @@ fun NotesApp(
     val items = listOf(
         BottomNavigationItem(
             title = "Notes",
-            selectedIcon = Icons.Filled.Home,
-            unselectedIcon = Icons.Outlined.Home,
+            selectedIcon = Icons.Filled.AutoStories,
+            unselectedIcon = Icons.Outlined.AutoStories,
             isTodo = false,
         ),
         BottomNavigationItem(

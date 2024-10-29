@@ -15,8 +15,14 @@ import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -30,6 +36,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -59,6 +66,8 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController) {
     var isLoading by remember { mutableStateOf(false) }
     val notePositions = remember { mutableStateListOf<Rect>() }
     val selectedNotes by remember { mutableStateOf(mutableSetOf<Notes>()) }
+    val updatedNotes = viewModel.updatedNotes.collectAsState(initial = emptyList()).value
+    var isMenuExpanded by remember { mutableStateOf(false) }
     LaunchedEffect(key1 = notes) {
         Log.d("HomePagereload", "Notes: $notes")
         viewModel.getNotesPaginated(limit, offset)
@@ -89,10 +98,22 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController) {
         selectedNotes.clear() // Clear the selection after deletion
     }
 
+    Log.d("HomePage", "Notes: ${updatedNotes.size}")
 
     Scaffold(
         topBar = {
-            HomeTopAppBar(onSearchClick = {}, onMenuClick = {})
+            HomeTopAppBar(
+                onSearchClick = {},
+                onMenuClick = {
+                    isMenuExpanded = !isMenuExpanded
+                },
+                onSearchTextChange = { searchText ->
+                    if(searchText.isEmpty()){
+                        viewModel.getNotesPaginated(limit, offset)
+                    }
+                    viewModel.searchNotes(searchText)
+                },
+            )
         },
         contentWindowInsets = WindowInsets(
             top = 0.dp,
@@ -107,6 +128,12 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController) {
             )
         }
     ) { innerPadding ->
+        if(isMenuExpanded){
+            Box(modifier = Modifier.padding(innerPadding).fillMaxSize(), contentAlignment = Alignment.TopEnd) {
+                // Show options when the FAB is expanded
+                FloatingActionMenu(isMenuExpanded) { isMenuExpanded = false}
+            }
+        }
         Column(
             modifier = Modifier
                 .padding(innerPadding)
@@ -170,13 +197,64 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController) {
                     }
                 }
             } else {
-                Text(text = "No notes available.", style = MaterialTheme.typography.bodyLarge)
+                Column(
+                    Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = " You haven't created any note yet \uD83D\uDE44, Click the + Icon to get started",
+                        style = MaterialTheme.typography.bodyLarge,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                }
             }
 
         }
     }
 }
 
+@Composable
+fun FloatingActionMenu(isMenuExpanded: Boolean, onDismiss: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.End,
+        modifier = Modifier.padding(16.dp)
+    ) {
+        DropdownMenu(
+            expanded = isMenuExpanded,
+            onDismissRequest = onDismiss
+        ) {
+            DropdownMenuItem(
+                text = { Text("Profile", style = MaterialTheme.typography.bodyLarge) },
+                onClick = {
+                    Log.d("FloatingActionMenu", "Clicked on Delete")
+                    onDismiss()
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Outlined.Person,
+                        contentDescription = "Profile",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+
+                }
+            )
+            DropdownMenuItem(
+                text = { Text("About", style = MaterialTheme.typography.bodyLarge) },
+                onClick = {
+                    onDismiss()
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Outlined.Info,
+                        contentDescription = "About",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            )
+        }
+    }
+}
 
 fun findTargetIndex(
     notes: List<Notes>,
