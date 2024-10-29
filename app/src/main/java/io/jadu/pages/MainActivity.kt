@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -31,9 +32,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import dagger.hilt.android.AndroidEntryPoint
 import io.jadu.pages.domain.model.BottomNavigationItem
 import io.jadu.pages.presentation.components.BottomNavigationBar
@@ -50,11 +53,16 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
+        val requestPermissions =
+            registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
+
+            }
         enableEdgeToEdge()
         setContent {
             val navController = rememberNavController()
+
             PagesTheme {
-                Scaffold { padding->
+                Scaffold { padding ->
                     Spacer(modifier = Modifier.padding(padding))
                     AppNavHost(navHostController = navController)
                 }
@@ -68,18 +76,27 @@ fun AppNavHost(
     modifier: Modifier = Modifier,
     navHostController: NavHostController,
     startDestination: String = NavigationItem.Home.route
-){
+) {
     val viewModel: NotesViewModel = hiltViewModel()
     NavHost(
         modifier = Modifier,
         navController = navHostController,
         startDestination = startDestination
     ) {
-        composable(NavigationItem.Home.route){
-            NotesApp(navHostController,viewModel)
+        composable(NavigationItem.Home.route) {
+            NotesApp(navHostController, viewModel)
         }
-        composable(NavigationItem.CreateNotes.route){
-            AddNewPage(viewModel,navHostController)
+        composable(NavigationItem.CreateNotes.route) {
+            AddNewPage(viewModel, navHostController)
+        }
+        composable(
+            "note/{nodeId}",
+            arguments = listOf(
+                navArgument("nodeId") {type = NavType.LongType}
+            )
+        ) { navBackStackEntry ->
+            val nodeId = navBackStackEntry.arguments?.getLong("nodeId")
+            AddNewPage(viewModel, navHostController, nodeId)
         }
     }
 
@@ -127,13 +144,12 @@ fun NotesApp(navHostController: NavHostController, viewModel: NotesViewModel) {
                 containerColor = ButtonBlue
             )
         }
-    ) {  innerPadding ->
-        Spacer(modifier = Modifier.padding(innerPadding))
+    ) { innerPadding ->
         Column(
             Modifier.padding(innerPadding)
         ) {
-            when(selectedItemIndex){
-                0 -> HomePage(viewModel)
+            when (selectedItemIndex) {
+                0 -> HomePage(viewModel, navHostController)
                 1 -> TodoPage()
             }
         }

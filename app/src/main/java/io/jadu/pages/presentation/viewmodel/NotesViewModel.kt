@@ -25,10 +25,12 @@ class NotesViewModel @Inject constructor(
     private val updateNotesPositionUseCase: UpdateNotesPositionUseCase
 ):ViewModel() {
 
-    init {
-        getNotesPaginated(10,0)
-    }
+   /* init {
+        getNotesPaginated(10, 0)
+    }*/
 
+    private var currentOffset = 0 // Tracks the current offset
+    private val limit = 10
     private val _notes = MutableStateFlow<List<Notes>>(emptyList())
     val notes: StateFlow<List<Notes>> get() = _notes
 
@@ -38,6 +40,7 @@ class NotesViewModel @Inject constructor(
 
     fun updateNotes(title: String, description: String?, imageUri: String?, notesId: Long, color:String?) = viewModelScope.launch {
         updateNotesUseCase.invoke(title, description, imageUri, notesId,color)
+        //getNotesPaginated(10, 0)
     }
 
     fun deleteNotes(noteId: Long) = viewModelScope.launch {
@@ -51,10 +54,22 @@ class NotesViewModel @Inject constructor(
     fun getNotesPaginated(limit: Int, offset: Int) {
         viewModelScope.launch {
             getNotesPaginatedUseCase(limit, offset).collect { newNotes ->
-                _notes.value = newNotes
+                val currentNotes = _notes.value.toMutableList()
+                newNotes.forEach { newNote ->
+                    val existingIndex = currentNotes.indexOfFirst { it.id == newNote.id }
+                    if (existingIndex != -1) {
+                        currentNotes[existingIndex] = newNote
+                    } else {
+                        currentNotes.add(newNote)
+                    }
+                }
+                _notes.value = currentNotes
             }
         }
     }
+
+
+
 
 
 

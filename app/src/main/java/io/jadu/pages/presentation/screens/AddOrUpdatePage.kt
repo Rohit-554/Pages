@@ -1,45 +1,37 @@
+import android.Manifest.permission.READ_EXTERNAL_STORAGE
+import android.Manifest.permission.READ_MEDIA_IMAGES
+import android.Manifest.permission.READ_MEDIA_VIDEO
+import android.Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED
+import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.util.Log
-import android.widget.Space
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Error
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
-import coil.compose.rememberImagePainter
 import io.jadu.pages.domain.model.Notes
 import io.jadu.pages.presentation.components.ColorPickerDialog
 import io.jadu.pages.presentation.components.CustomInputFields
@@ -50,37 +42,76 @@ import io.jadu.pages.presentation.components.imeListener
 import io.jadu.pages.presentation.viewmodel.NotesViewModel
 import io.jadu.pages.ui.theme.Black
 import io.jadu.pages.ui.theme.LightGray
-import io.jadu.pages.ui.theme.PrimaryBackground
-import io.jadu.pages.ui.theme.White
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun AddNewPage(viewModel: NotesViewModel, navHostController: NavHostController) {
-    var title by remember { mutableStateOf(TextFieldValue("")) }
-    var description by remember { mutableStateOf(TextFieldValue("")) }
-    val selectedImage by remember { mutableStateOf<String?>(null) }
+fun AddNewPage(
+    viewModel: NotesViewModel,
+    navHostController: NavHostController,
+    notesId: Long? = 0L
+) {
     val imeState = imeListener()
     val scrollState = rememberScrollState()
-    var areFieldEmpty by remember { mutableStateOf(false) }
-
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
-    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
-
-    var showColorPickerDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val notes = viewModel.notes.collectAsState(initial = emptyList()).value
+    val toolBarText = if (notesId != 0L) "Update Note" else "Add New Note"
     val defaultColor = MaterialTheme.colorScheme.background
+
+    var title by remember { mutableStateOf(TextFieldValue("")) }
+    var description by remember { mutableStateOf(TextFieldValue("")) }
     var selectedColor by remember { mutableStateOf(defaultColor) }
-    val pickMedia =
-        rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-            if (uri != null) {
-                selectedImageUri = uri
-                Log.d("PhotoPicker", "Selected URI: $uri")
-            } else {
-                Log.d("PhotoPicker", "No media selected")
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var selectedImage by remember { mutableStateOf<String?>(null) }
+    var areFieldEmpty by remember { mutableStateOf(false) }
+    var showColorPickerDialog by remember { mutableStateOf(false) }
+
+
+    LaunchedEffect(notesId, notes) {
+        if (notesId != 0L) {
+            val note = notes.find { it.id == notesId }
+            if (note != null) {
+                title = TextFieldValue(note.title)
+                description = TextFieldValue(note.description ?: "")
+                selectedColor = note.color?.let { Color(it.toULong()) } ?: defaultColor
+                selectedImageUri = note.imageUri?.let { Uri.parse(it) }
             }
         }
+    }
+
+    val openDocumentLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let {
+            val contentResolver = context.contentResolver
+            contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+
+            selectedImageUri = uri
+        }
+    }
+
+    val requestPermissions =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
+            val deniedPermissions = results.filter { !it.value }
+            if (deniedPermissions.isNotEmpty()) {
+                val deniedPermissionsNames = deniedPermissions.keys.joinToString(", ")
+                Toast.makeText(
+                    context,
+                    "Permissions denied, Please grant to access media files",
+                    Toast.LENGTH_LONG
+                ).show()
+            } else {
+                openDocumentLauncher.launch(arrayOf("image/*"))
+            }
+        }
+
+
 
     LaunchedEffect(
         key1 = imeState.value
@@ -95,7 +126,7 @@ fun AddNewPage(viewModel: NotesViewModel, navHostController: NavHostController) 
             TopAppBar(
                 title = {
                     Text(
-                        "Add New Note",
+                        toolBarText,
                         style = TextStyle(
                             fontFamily = MaterialTheme.typography.bodyLarge.fontFamily,
                             fontSize = MaterialTheme.typography.titleLarge.fontSize
@@ -116,7 +147,19 @@ fun AddNewPage(viewModel: NotesViewModel, navHostController: NavHostController) 
             Column {
                 EditPageBottomAppBar(
                     onImagePickClick = {
-                        pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                            requestPermissions.launch(
+                                arrayOf(
+                                    READ_MEDIA_IMAGES,
+                                    READ_MEDIA_VIDEO,
+                                    READ_MEDIA_VISUAL_USER_SELECTED
+                                )
+                            )
+                        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            requestPermissions.launch(arrayOf(READ_MEDIA_IMAGES, READ_MEDIA_VIDEO))
+                        } else {
+                            requestPermissions.launch(arrayOf(READ_EXTERNAL_STORAGE))
+                        }
                     },
                     onColorPickClick = {
                         showColorPickerDialog = true
@@ -138,20 +181,41 @@ fun AddNewPage(viewModel: NotesViewModel, navHostController: NavHostController) 
                         id = System.currentTimeMillis(),
                         title = title.text,
                         description = description.text,
-                        color = selectedColor.toString(),
+                        color = if (selectedColor != defaultColor) selectedColor.toString() else null,
                         imageUri = selectedImageUri.toString()
                     )
-                    viewModel.addNotes(newNote)
-                    areFieldEmpty = false
-                    coroutineScope.launch {
-                        snackbarHostState.showSnackbar(
-                            "Saved Successfully",
-                            duration = SnackbarDuration.Short
+                    if(notesId != 0L && notesId != null){
+                        Log.d("update", "AddNewPage: $selectedImageUri")
+                        viewModel.updateNotes(
+                            title = title.text,
+                            description = description.text,
+                            imageUri = selectedImageUri.toString(),
+                            notesId = notesId,
+                            color = if (selectedColor != defaultColor) selectedColor.toString() else null
                         )
-                    }
-                    coroutineScope.launch {
-                        delay(250)
-                        navHostController.popBackStack()
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar(
+                                "Updated Successfully",
+                                duration = SnackbarDuration.Short
+                            )
+                        }
+                        coroutineScope.launch {
+                            delay(250)
+                            navHostController.popBackStack()
+                        }
+                    }else{
+                        Log.d("create", "AddNewPage: $newNote")
+                        viewModel.addNotes(newNote)
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar(
+                                "Saved Successfully",
+                                duration = SnackbarDuration.Short
+                            )
+                        }
+                        coroutineScope.launch {
+                            delay(250)
+                            navHostController.popBackStack()
+                        }
                     }
                 }
             }
@@ -220,7 +284,7 @@ fun AddNewPage(viewModel: NotesViewModel, navHostController: NavHostController) 
                         )
                     }
 
-                    selectedImageUri?.let {
+                    if(selectedImageUri!=null){
                         item {
                             Box {
                                 Column {
@@ -238,22 +302,26 @@ fun AddNewPage(viewModel: NotesViewModel, navHostController: NavHostController) 
                                                 }
                                         )
                                     }
+                                    val screenHeight = LocalConfiguration.current.screenHeightDp
                                     Image(
-                                        painter = rememberAsyncImagePainter(it),
+                                        painter = rememberAsyncImagePainter(selectedImageUri),
                                         contentDescription = "Selected Image",
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .height(800.dp),
-                                        contentScale = ContentScale.FillWidth
+                                            .wrapContentHeight()
+                                            .then(Modifier.heightIn(max = screenHeight.dp / 3)),
+
+                                        contentScale = ContentScale.Crop
                                     )
                                 }
                             }
                         }
                     }
+
+
                 }
             }
-        }
-        ,
+        },
         snackbarHost = {
             CustomSnackBar(
                 snackBarHostState = snackbarHostState,
@@ -268,6 +336,7 @@ fun AddNewPage(viewModel: NotesViewModel, navHostController: NavHostController) 
 fun checkIfFieldEmpty(fieldKey: String): Boolean {
     return fieldKey.isEmpty()
 }
+
 
 
 
