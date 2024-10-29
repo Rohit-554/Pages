@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.util.Collections
 import javax.inject.Inject
 
 @HiltViewModel
@@ -23,11 +24,11 @@ class NotesViewModel @Inject constructor(
     private val deleteNotesUseCase: DeleteNotesUseCase,
     private val getNotesPaginatedUseCase: GetNotesPaginatedUseCase,
     private val updateNotesPositionUseCase: UpdateNotesPositionUseCase
-):ViewModel() {
+) : ViewModel() {
 
-   /* init {
-        getNotesPaginated(10, 0)
-    }*/
+    /* init {
+         getNotesPaginated(10, 0)
+     }*/
 
     private var currentOffset = 0 // Tracks the current offset
     private val limit = 10
@@ -38,19 +39,31 @@ class NotesViewModel @Inject constructor(
         addNotesUseCase.invoke(note)
     }
 
-    fun updateNotes(title: String, description: String?, imageUri: String?, notesId: Long, color:String?) = viewModelScope.launch {
-        updateNotesUseCase.invoke(title, description, imageUri, notesId,color)
+    fun updateNotes(
+        title: String,
+        description: String?,
+        imageUri: String?,
+        notesId: Long,
+        color: String?
+    ) = viewModelScope.launch {
+        updateNotesUseCase.invoke(title, description, imageUri, notesId, color)
         //getNotesPaginated(10, 0)
     }
 
     fun deleteNotes(noteId: Long) = viewModelScope.launch {
         deleteNotesUseCase.invoke(noteId)
+        _notes.value = _notes.value.filter { it.id != noteId }
     }
 
     fun updateNotesPosition(id: Long, position: Int) = viewModelScope.launch {
         updateNotesPositionUseCase.invoke(id, position)
     }
 
+    fun swapNotes(index1: Int, index2: Int) {
+        val currentNotes = _notes.value.toMutableList()
+        Collections.swap(currentNotes, index1, index2)
+        _notes.value = currentNotes
+    }
     fun getNotesPaginated(limit: Int, offset: Int) {
         viewModelScope.launch {
             getNotesPaginatedUseCase(limit, offset).collect { newNotes ->
@@ -63,15 +76,13 @@ class NotesViewModel @Inject constructor(
                         currentNotes.add(newNote)
                     }
                 }
-                _notes.value = currentNotes
+
+                val newNoteIds = newNotes.map { it.id }.toSet()
+                _notes.value =
+                    currentNotes.filter { it.id in newNoteIds || currentNotes.indexOf(it) < currentNotes.size }
             }
         }
     }
-
-
-
-
-
 
 
 }

@@ -1,5 +1,6 @@
 package io.jadu.pages.presentation.components
 
+import android.media.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -49,7 +50,8 @@ fun CustomFab(
 
 
 @Composable
-fun SaveFab(onClick : () -> Unit) {
+fun SaveFab(onClick : () -> Unit, icon:ImageVector = Icons.Filled.Save, containerColor:Color = Color.White,
+            tintColor:Color = Color.Black) {
     Box(
         contentAlignment = Alignment.CenterEnd,
         modifier = Modifier.fillMaxWidth()
@@ -65,13 +67,13 @@ fun SaveFab(onClick : () -> Unit) {
                     .padding(horizontal = 0.dp)
                     .clip(RoundedCornerShape(16.dp))
                     .background(White),
-                containerColor = White,
+                containerColor = containerColor,
                 elevation = FloatingActionButtonDefaults.elevation(5.dp),
             ) {
                 Icon(
-                    imageVector = Icons.Filled.Save,
+                    imageVector = icon,
                     contentDescription = "Save Note",
-                    tint = Color.Black
+                    tint = tintColor
                 )
             }
         }

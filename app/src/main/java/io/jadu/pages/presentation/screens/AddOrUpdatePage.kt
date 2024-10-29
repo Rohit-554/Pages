@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -39,6 +40,7 @@ import io.jadu.pages.presentation.components.CustomSnackBar
 import io.jadu.pages.presentation.components.EditPageBottomAppBar
 import io.jadu.pages.presentation.components.SaveFab
 import io.jadu.pages.presentation.components.imeListener
+import io.jadu.pages.presentation.screens.parseColor
 import io.jadu.pages.presentation.viewmodel.NotesViewModel
 import io.jadu.pages.ui.theme.Black
 import io.jadu.pages.ui.theme.LightGray
@@ -76,7 +78,7 @@ fun AddNewPage(
             if (note != null) {
                 title = TextFieldValue(note.title)
                 description = TextFieldValue(note.description ?: "")
-                selectedColor = note.color?.let { Color(it.toULong()) } ?: defaultColor
+                selectedColor = note.color?.let { parseColor(it) } ?: defaultColor
                 selectedImageUri = note.imageUri?.let { Uri.parse(it) }
             }
         }
@@ -145,6 +147,27 @@ fun AddNewPage(
         },
         floatingActionButton = {
             Column {
+                if(notesId!=0L && notesId!=null){
+                    SaveFab(
+                        icon = Icons.Default.Delete,
+                        containerColor = Color(0xffff474c),
+                        tintColor = Color.White,
+                        onClick = {
+                            viewModel.deleteNotes(notesId)
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar(
+                                    "Delted Successfully",
+                                    duration = SnackbarDuration.Short
+                                )
+                            }
+                            coroutineScope.launch {
+                                delay(250)
+                                navHostController.popBackStack()
+                            }
+                        }
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
                 EditPageBottomAppBar(
                     onImagePickClick = {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
@@ -166,58 +189,58 @@ fun AddNewPage(
                     }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                SaveFab {
-                    if (checkIfFieldEmpty(title.text)) {
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar(
-                                "Title cannot be empty",
-                                duration = SnackbarDuration.Short
-                            )
+                SaveFab(
+                    onClick = {
+                        if (checkIfFieldEmpty(title.text)) {
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar(
+                                    "Title cannot be empty",
+                                    duration = SnackbarDuration.Short
+                                )
+                            }
+                            areFieldEmpty = true
+                            return@SaveFab
                         }
-                        areFieldEmpty = true
-                        return@SaveFab
-                    }
-                    val newNote = Notes(
-                        id = System.currentTimeMillis(),
-                        title = title.text,
-                        description = description.text,
-                        color = if (selectedColor != defaultColor) selectedColor.toString() else null,
-                        imageUri = selectedImageUri.toString()
-                    )
-                    if(notesId != 0L && notesId != null){
-                        Log.d("update", "AddNewPage: $selectedImageUri")
-                        viewModel.updateNotes(
+                        val newNote = Notes(
+                            id = System.currentTimeMillis(),
                             title = title.text,
                             description = description.text,
-                            imageUri = selectedImageUri.toString(),
-                            notesId = notesId,
-                            color = if (selectedColor != defaultColor) selectedColor.toString() else null
+                            color = if (selectedColor != defaultColor) selectedColor.toString() else null,
+                            imageUri = selectedImageUri.toString()
                         )
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar(
-                                "Updated Successfully",
-                                duration = SnackbarDuration.Short
+                        if(notesId != 0L && notesId != null){
+                            viewModel.updateNotes(
+                                title = title.text,
+                                description = description.text,
+                                imageUri = selectedImageUri.toString(),
+                                notesId = notesId,
+                                color = if (selectedColor != defaultColor) selectedColor.toString() else null
                             )
-                        }
-                        coroutineScope.launch {
-                            delay(250)
-                            navHostController.popBackStack()
-                        }
-                    }else{
-                        Log.d("create", "AddNewPage: $newNote")
-                        viewModel.addNotes(newNote)
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar(
-                                "Saved Successfully",
-                                duration = SnackbarDuration.Short
-                            )
-                        }
-                        coroutineScope.launch {
-                            delay(250)
-                            navHostController.popBackStack()
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar(
+                                    "Updated Successfully",
+                                    duration = SnackbarDuration.Short
+                                )
+                            }
+                            coroutineScope.launch {
+                                delay(250)
+                                navHostController.popBackStack()
+                            }
+                        }else{
+                            viewModel.addNotes(newNote)
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar(
+                                    "Saved Successfully",
+                                    duration = SnackbarDuration.Short
+                                )
+                            }
+                            coroutineScope.launch {
+                                delay(250)
+                                navHostController.popBackStack()
+                            }
                         }
                     }
-                }
+                )
             }
         },
         content = { padding ->
@@ -284,7 +307,7 @@ fun AddNewPage(
                         )
                     }
 
-                    if(selectedImageUri!=null){
+                    if(selectedImageUri!=null && selectedImageUri.toString() != "null"){
                         item {
                             Box {
                                 Column {
