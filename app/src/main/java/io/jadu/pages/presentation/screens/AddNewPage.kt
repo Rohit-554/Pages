@@ -1,18 +1,23 @@
 import android.net.Uri
 import android.util.Log
+import android.widget.Space
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Info
@@ -27,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
@@ -39,6 +45,7 @@ import io.jadu.pages.presentation.components.ColorPickerDialog
 import io.jadu.pages.presentation.components.CustomInputFields
 import io.jadu.pages.presentation.components.CustomSnackBar
 import io.jadu.pages.presentation.components.EditPageBottomAppBar
+import io.jadu.pages.presentation.components.SaveFab
 import io.jadu.pages.presentation.components.imeListener
 import io.jadu.pages.presentation.viewmodel.NotesViewModel
 import io.jadu.pages.ui.theme.Black
@@ -48,7 +55,7 @@ import io.jadu.pages.ui.theme.White
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddNewPage(viewModel: NotesViewModel, navHostController: NavHostController) {
     var title by remember { mutableStateOf(TextFieldValue("")) }
@@ -63,7 +70,8 @@ fun AddNewPage(viewModel: NotesViewModel, navHostController: NavHostController) 
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
     var showColorPickerDialog by remember { mutableStateOf(false) }
-    var selectedColor by remember { mutableStateOf(Black) }
+    val defaultColor = MaterialTheme.colorScheme.background
+    var selectedColor by remember { mutableStateOf(defaultColor) }
     val pickMedia =
         rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
             if (uri != null) {
@@ -73,7 +81,7 @@ fun AddNewPage(viewModel: NotesViewModel, navHostController: NavHostController) 
                 Log.d("PhotoPicker", "No media selected")
             }
         }
-    val defaultColor = MaterialTheme.colorScheme.background
+
     LaunchedEffect(
         key1 = imeState.value
     ) {
@@ -104,142 +112,153 @@ fun AddNewPage(viewModel: NotesViewModel, navHostController: NavHostController) 
                 }
             )
         },
-        bottomBar = {
-            BottomAppBar(
-                containerColor = Color.Transparent,
-                content = {
-                    Box(
-                        contentAlignment = Alignment.CenterEnd,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            horizontalArrangement = Arrangement.End,
-                        ) {
-                            FloatingActionButton(
-                                onClick = {
-                                    if (checkIfFieldEmpty(title.text)) {
-                                        coroutineScope.launch {
-                                            snackbarHostState.showSnackbar(
-                                                "Title cannot be empty",
-                                                duration = SnackbarDuration.Short
-                                            )
-                                        }
-                                        areFieldEmpty = true
-                                        return@FloatingActionButton
-                                    }
-                                    val newNote = Notes(
-                                        id = System.currentTimeMillis(),
-                                        title = title.text,
-                                        description = description.text,
-                                    )
-                                    viewModel.addNotes(newNote)
-                                    areFieldEmpty = false
-                                    coroutineScope.launch {
-                                        snackbarHostState.showSnackbar(
-                                            "Saved Successfully",
-                                            duration = SnackbarDuration.Short
-                                        )
-                                    }
-                                    coroutineScope.launch {
-                                        delay(250)
-                                        navHostController.popBackStack()
-                                    }
-                                },
-                                modifier = Modifier
-                                    .padding(horizontal = 12.dp)
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .background(White),
-                                containerColor = White,
-                                elevation = FloatingActionButtonDefaults.elevation(5.dp),
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.Save,
-                                    contentDescription = "Save Note",
-                                    tint = Color.Black
-                                )
-                            }
+        floatingActionButton = {
+            Column {
+                EditPageBottomAppBar(
+                    onImagePickClick = {
+                        pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                    },
+                    onColorPickClick = {
+                        showColorPickerDialog = true
+                    }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                SaveFab {
+                    if (checkIfFieldEmpty(title.text)) {
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar(
+                                "Title cannot be empty",
+                                duration = SnackbarDuration.Short
+                            )
                         }
+                        areFieldEmpty = true
+                        return@SaveFab
+                    }
+                    val newNote = Notes(
+                        id = System.currentTimeMillis(),
+                        title = title.text,
+                        description = description.text,
+                        color = selectedColor.toString(),
+                        imageUri = selectedImageUri.toString()
+                    )
+                    viewModel.addNotes(newNote)
+                    areFieldEmpty = false
+                    coroutineScope.launch {
+                        snackbarHostState.showSnackbar(
+                            "Saved Successfully",
+                            duration = SnackbarDuration.Short
+                        )
+                    }
+                    coroutineScope.launch {
+                        delay(250)
+                        navHostController.popBackStack()
                     }
                 }
-            )
-        },
-        floatingActionButton = {
-            EditPageBottomAppBar(
-                onImagePickClick = {
-                    pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                },
-                onColorPickClick = {
-                    showColorPickerDialog = true
-                }
-            )
+            }
         },
         content = { padding ->
             Box(
                 modifier = Modifier
                     .padding(padding)
                     .fillMaxSize()
+                    .consumeWindowInsets(padding)
+
             ) {
-                Column(
+                LazyColumn(
                     modifier = Modifier
                         .padding(16.dp)
-                        .verticalScroll(scrollState)
-                        .fillMaxSize(),
+                        .fillMaxHeight(),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    CustomInputFields(
-                        text = title.text,
-                        onTitleChange = { title = TextFieldValue(it) },
-                        hintText = "Your Title",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                    )
-                    CustomInputFields(
-                        text = description.text,
-                        onTitleChange = { description = TextFieldValue(it) },
-                        hintText = "Write your note here...",
-                        textStyle = TextStyle(
-                            color = Color.White,
-                            fontFamily = MaterialTheme.typography.bodyLarge.fontFamily,
-                            fontSize = 16.sp
-                        ),
-                        singleLine = false,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                    )
 
-                    //show photo from uri
-                    selectedImageUri?.let {
-                        Image(
-                            painter = rememberAsyncImagePainter(it),
-                            contentDescription = "Selected Image",
+                    item {
+                        CustomInputFields(
+                            text = title.text,
+                            onTitleChange = { title = TextFieldValue(it) },
+                            hintText = "Your Title",
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(500.dp),
+                                .padding(8.dp)
                         )
                     }
 
-                    ColorPickerDialog(
-                        showDialog = showColorPickerDialog,
-                        onDismiss = { showColorPickerDialog = false },
-                        onColorSelected = { color ->
-                            selectedColor = color
-                        },
-                        selectedColor = selectedColor,
-                        onResetToDefaultSelected = {
-                            selectedColor = defaultColor
-                        }
-                    )
+                    item {
+                        HorizontalDivider(
+                            color = LightGray,
+                            thickness = 1.dp,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
 
+                    item {
+                        CustomInputFields(
+                            text = description.text,
+                            onTitleChange = { description = TextFieldValue(it) },
+                            hintText = "Write your note here...",
+                            textStyle = TextStyle(
+                                color = Color.White,
+                                fontFamily = MaterialTheme.typography.bodyLarge.fontFamily,
+                                fontSize = 16.sp
+                            ),
+                            singleLine = false,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp)
+                        )
+                    }
+                    item {
+                        ColorPickerDialog(
+                            showDialog = showColorPickerDialog,
+                            onDismiss = { showColorPickerDialog = false },
+                            onColorSelected = { color ->
+                                selectedColor = color
+                            },
+                            selectedColor = selectedColor,
+                            onResetToDefaultSelected = {
+                                selectedColor = defaultColor
+                            }
+                        )
+                    }
+
+                    selectedImageUri?.let {
+                        item {
+                            Box {
+                                Column {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.End
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Cancel,
+                                            contentDescription = "Color Lens",
+                                            modifier = Modifier
+                                                .size(24.dp)
+                                                .clickable {
+                                                    selectedImageUri = null
+                                                }
+                                        )
+                                    }
+                                    Image(
+                                        painter = rememberAsyncImagePainter(it),
+                                        contentDescription = "Selected Image",
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(800.dp),
+                                        contentScale = ContentScale.FillWidth
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
-        },
+        }
+        ,
         snackbarHost = {
             CustomSnackBar(
                 snackBarHostState = snackbarHostState,
-                icon = if (areFieldEmpty) Icons.Filled.Error else Icons.Filled.Check,  // Pass error or info icon
-                isError = areFieldEmpty // Set true for error message
+                icon = if (areFieldEmpty) Icons.Filled.Error else Icons.Filled.Check,
+                isError = areFieldEmpty
             )
         }
     )
@@ -249,4 +268,6 @@ fun AddNewPage(viewModel: NotesViewModel, navHostController: NavHostController) 
 fun checkIfFieldEmpty(fieldKey: String): Boolean {
     return fieldKey.isEmpty()
 }
+
+
 
