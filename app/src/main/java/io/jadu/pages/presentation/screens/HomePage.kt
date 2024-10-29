@@ -67,8 +67,8 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController) {
     val selectedNotes by remember { mutableStateOf(mutableSetOf<Notes>()) }
     val updatedNotes = viewModel.updatedNotes.collectAsState(initial = emptyList()).value
     var isMenuExpanded by remember { mutableStateOf(false) }
+
     LaunchedEffect(key1 = notes) {
-        Log.d("HomePagereload", "Notes: $notes")
         viewModel.getNotesPaginated(limit, offset)
     }
 

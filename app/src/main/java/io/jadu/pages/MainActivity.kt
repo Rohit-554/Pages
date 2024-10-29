@@ -26,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -39,6 +40,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import dagger.hilt.android.AndroidEntryPoint
+import io.jadu.pages.core.Constants
+import io.jadu.pages.core.PreferencesManager
 import io.jadu.pages.domain.model.BottomNavigationItem
 import io.jadu.pages.presentation.components.BottomNavigationBar
 import io.jadu.pages.presentation.navigation.NavigationItem
@@ -46,6 +49,9 @@ import io.jadu.pages.presentation.screens.AboutPage
 import io.jadu.pages.presentation.screens.HomePage
 import io.jadu.pages.presentation.screens.ProfilePage
 import io.jadu.pages.presentation.screens.TodoPage
+import io.jadu.pages.presentation.screens.introScreens.IntroPager
+import io.jadu.pages.presentation.screens.introScreens.IntroScreenOne
+import io.jadu.pages.presentation.screens.introScreens.IntroScreenTwo
 import io.jadu.pages.presentation.viewmodel.NotesViewModel
 import io.jadu.pages.presentation.viewmodel.TodoViewModel
 import io.jadu.pages.ui.theme.PagesTheme
@@ -78,10 +84,13 @@ class MainActivity : ComponentActivity() {
 fun AppNavHost(
     modifier: Modifier = Modifier,
     navHostController: NavHostController,
-    startDestination: String = NavigationItem.Home.route
+    startDestination: String = NavigationItem.IntroPagerScreen.route
 ) {
     val viewModel: NotesViewModel = hiltViewModel()
     val todoViewModel: TodoViewModel = hiltViewModel()
+    val context = LocalContext.current
+    val preferencesManager = remember { PreferencesManager(context) }
+    val isIntroScreen = preferencesManager.getBoolean(Constants.IS_INTRO_SHOWN)
 
     NavHost(
         modifier = Modifier,
@@ -111,6 +120,24 @@ fun AppNavHost(
         composable(NavigationItem.AboutPage.route) {
             AboutPage(navHostController)
         }
+
+        composable(NavigationItem.IntroScreenOne.route) {
+            IntroScreenOne()
+        }
+
+        composable(NavigationItem.IntroScreenTwo.route){
+            IntroScreenTwo(navHostController)
+        }
+
+        composable(NavigationItem.IntroPagerScreen.route){
+            IntroPager(navHostController)
+        }
+    }
+
+    if(!isIntroScreen){
+        navHostController.navigate(NavigationItem.IntroPagerScreen.route)
+    }else{
+        navHostController.navigate(NavigationItem.Home.route)
     }
 
 }
