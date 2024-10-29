@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -34,6 +35,7 @@ import androidx.navigation.NavHostController
 import io.jadu.pages.R
 import io.jadu.pages.core.Constants
 import io.jadu.pages.core.PreferencesManager
+import io.jadu.pages.presentation.components.CustomTopAppBar
 import io.jadu.pages.ui.theme.White
 
 @Composable
@@ -42,76 +44,86 @@ fun ProfilePage(paddingValues: PaddingValues, navHostController: NavHostControll
     val context = LocalContext.current
     val preferencesManager = remember { PreferencesManager(context) }
     var name by remember { mutableStateOf(preferencesManager.getName() ?: "Master") }
-    Column(
-        modifier = Modifier
-            .padding(paddingValues)
-            .fillMaxSize()
-            .pointerInput(Unit) {
-                detectTapGestures(onTap = {
-                    preferencesManager.setName(name)
-                    if (isEditing) {
-                        isEditing = false
-                    }
-                })
-            },
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+    Scaffold(
+        topBar = {
+            CustomTopAppBar(
+                title = "Profile",
+                navHostController = navHostController
+            )
+        }
     ) {
-
-        Image(
-            painter = painterResource(id = R.drawable.avatar),
-            contentDescription = "User Avatar",
+        Column(
             modifier = Modifier
-                .size(100.dp)
-                .clip(RoundedCornerShape(50.dp)),
-            contentScale = ContentScale.Crop
-        )
+                .padding(paddingValues)
+                .fillMaxSize()
+                .pointerInput(Unit) {
+                    detectTapGestures(onTap = {
+                        preferencesManager.setName(name)
+                        if (isEditing) {
+                            isEditing = false
+                        }
+                    })
+                },
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Image(
+                painter = painterResource(id = R.drawable.avatar),
+                contentDescription = "User Avatar",
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(RoundedCornerShape(50.dp)),
+                contentScale = ContentScale.Crop
+            )
 
-        if (isEditing) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                TextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = null,
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        cursorColor = Color.White
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (isEditing) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    TextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = null,
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            cursorColor = Color.White
+                        )
                     )
-                )
-            }
-        } else {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = name,
-                    style = androidx.compose.material3.MaterialTheme.typography.bodyLarge,
-                    fontSize = 36.sp,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = "Edit Name",
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clickable { isEditing = true }
-                )
+                }
+            } else {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = name,
+                        style = androidx.compose.material3.MaterialTheme.typography.bodyLarge,
+                        fontSize = 36.sp,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Edit Name",
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clickable { isEditing = true }
+                    )
+                }
             }
         }
     }
+
 }
 
 

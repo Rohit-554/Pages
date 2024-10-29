@@ -129,7 +129,6 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController) {
     ) { innerPadding ->
         if(isMenuExpanded){
             Box(modifier = Modifier.padding(innerPadding).fillMaxSize(), contentAlignment = Alignment.TopEnd) {
-                // Show options when the FAB is expanded
                 FloatingActionMenu(isMenuExpanded,navHostController) { isMenuExpanded = false}
             }
         }
@@ -244,6 +243,7 @@ fun FloatingActionMenu(
             DropdownMenuItem(
                 text = { Text("About", style = MaterialTheme.typography.bodyLarge) },
                 onClick = {
+                    navHostController.navigate(NavigationItem.AboutPage.route)
                     onDismiss()
                 },
                 leadingIcon = {

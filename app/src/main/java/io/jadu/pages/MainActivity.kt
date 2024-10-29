@@ -23,6 +23,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.navigation.NavHostController
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -41,6 +42,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import io.jadu.pages.domain.model.BottomNavigationItem
 import io.jadu.pages.presentation.components.BottomNavigationBar
 import io.jadu.pages.presentation.navigation.NavigationItem
+import io.jadu.pages.presentation.screens.AboutPage
 import io.jadu.pages.presentation.screens.HomePage
 import io.jadu.pages.presentation.screens.ProfilePage
 import io.jadu.pages.presentation.screens.TodoPage
@@ -95,7 +97,7 @@ fun AppNavHost(
         composable(
             "note/{nodeId}",
             arguments = listOf(
-                navArgument("nodeId") {type = NavType.LongType}
+                navArgument("nodeId") { type = NavType.LongType }
             )
         ) { navBackStackEntry ->
             val nodeId = navBackStackEntry.arguments?.getLong("nodeId")
@@ -103,7 +105,11 @@ fun AppNavHost(
         }
 
         composable(NavigationItem.ProfilePage.route) {
-            ProfilePage(PaddingValues(8.dp),navHostController)
+            ProfilePage(PaddingValues(8.dp), navHostController)
+        }
+
+        composable(NavigationItem.AboutPage.route) {
+            AboutPage(navHostController)
         }
     }
 
@@ -150,7 +156,7 @@ fun NotesApp(
         ) {
             when (selectedItemIndex) {
                 0 -> HomePage(viewModel, navHostController)
-                1 -> TodoPage(todoViewModel,navHostController)
+                1 -> TodoPage(todoViewModel, navHostController)
             }
         }
     }
