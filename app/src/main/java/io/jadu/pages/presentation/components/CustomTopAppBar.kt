@@ -1,36 +1,40 @@
 package io.jadu.pages.presentation.components
 
-import androidx.compose.foundation.layout.height
-import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CustomTopAppBar(onSearchClick: () -> Unit, onMenuClick: () -> Unit) {
+fun CustomTopAppBar(
+    title: String,
+    navHostController: NavHostController,
+) {
     TopAppBar(
         title = {
             Text(
-                text = "Hi Rohit!",
+                text = title,
                 style = TextStyle(
                     fontFamily = MaterialTheme.typography.bodyLarge.fontFamily,
                     fontSize = MaterialTheme.typography.titleLarge.fontSize
                 )
             )
         },
-        actions = {
-            IconButton(onClick = onSearchClick) {
-                Icon(imageVector = Icons.Filled.Search, contentDescription = "Search")
+        navigationIcon = {
+            IconButton(onClick = { navHostController.popBackStack() }) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back"
+                )
             }
-            IconButton(onClick = onMenuClick) {
-                Icon(imageVector = Icons.Filled.Menu, contentDescription = "Menu")
-            }
-        },
+        }
     )
 }

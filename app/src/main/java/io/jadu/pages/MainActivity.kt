@@ -12,14 +12,11 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.navigation.NavHostController
 import androidx.compose.runtime.Composable
@@ -44,7 +41,7 @@ import io.jadu.pages.presentation.navigation.NavigationItem
 import io.jadu.pages.presentation.screens.HomePage
 import io.jadu.pages.presentation.screens.TodoPage
 import io.jadu.pages.presentation.viewmodel.NotesViewModel
-import io.jadu.pages.ui.theme.ButtonBlue
+import io.jadu.pages.presentation.viewmodel.TodoViewModel
 import io.jadu.pages.ui.theme.PagesTheme
 
 @AndroidEntryPoint
@@ -78,13 +75,15 @@ fun AppNavHost(
     startDestination: String = NavigationItem.Home.route
 ) {
     val viewModel: NotesViewModel = hiltViewModel()
+    val todoViewModel: TodoViewModel = hiltViewModel()
+
     NavHost(
         modifier = Modifier,
         navController = navHostController,
         startDestination = startDestination
     ) {
         composable(NavigationItem.Home.route) {
-            NotesApp(navHostController, viewModel)
+            NotesApp(navHostController, viewModel, todoViewModel)
         }
         composable(NavigationItem.CreateNotes.route) {
             AddNewPage(viewModel, navHostController)
@@ -103,7 +102,11 @@ fun AppNavHost(
 }
 
 @Composable
-fun NotesApp(navHostController: NavHostController, viewModel: NotesViewModel) {
+fun NotesApp(
+    navHostController: NavHostController,
+    viewModel: NotesViewModel,
+    todoViewModel: TodoViewModel
+) {
     var selectedItemIndex by rememberSaveable {
         mutableIntStateOf(0)
     }
@@ -133,24 +136,13 @@ fun NotesApp(navHostController: NavHostController, viewModel: NotesViewModel) {
             top = 0.dp,
             bottom = 0.dp
         ),
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    navHostController.navigate(NavigationItem.CreateNotes.route)
-                },
-                content = {
-                    Icon(Icons.Default.Add, contentDescription = "Add Note")
-                },
-                containerColor = ButtonBlue
-            )
-        }
     ) { innerPadding ->
         Column(
             Modifier.padding(innerPadding)
         ) {
             when (selectedItemIndex) {
                 0 -> HomePage(viewModel, navHostController)
-                1 -> TodoPage()
+                1 -> TodoPage(todoViewModel,navHostController)
             }
         }
     }

@@ -37,6 +37,7 @@ import io.jadu.pages.domain.model.Notes
 import io.jadu.pages.presentation.components.ColorPickerDialog
 import io.jadu.pages.presentation.components.CustomInputFields
 import io.jadu.pages.presentation.components.CustomSnackBar
+import io.jadu.pages.presentation.components.CustomTopAppBar
 import io.jadu.pages.presentation.components.EditPageBottomAppBar
 import io.jadu.pages.presentation.components.SaveFab
 import io.jadu.pages.presentation.components.imeListener
@@ -125,24 +126,9 @@ fun AddNewPage(
     Scaffold(
         containerColor = if (selectedColor != Black) selectedColor else MaterialTheme.colorScheme.background,
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        toolBarText,
-                        style = TextStyle(
-                            fontFamily = MaterialTheme.typography.bodyLarge.fontFamily,
-                            fontSize = MaterialTheme.typography.titleLarge.fontSize
-                        )
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navHostController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                }
+            CustomTopAppBar(
+                title = toolBarText,
+                navHostController = navHostController
             )
         },
         floatingActionButton = {
