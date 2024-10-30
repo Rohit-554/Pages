@@ -58,7 +58,7 @@ fun DraggableNoteCard(
                         offsetY = 0f
                     },
                     onDrag = { change, dragAmount ->
-                        change.consume() // Consume the drag change
+                        change.consume()
                         offsetX += dragAmount.x
                         offsetY += dragAmount.y
 
@@ -79,6 +79,6 @@ fun DraggableNoteCard(
             }
             .background(if (isSelected) Color.LightGray else Color.Transparent)
     ) {
-        NoteCard(note = note, navHostController = navHostController, onLongPress = {})
+        NoteCard(note = note, navHostController = navHostController, onLongPress = {}, isSelected = false)
     }
 }

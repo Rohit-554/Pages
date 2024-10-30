@@ -2,12 +2,15 @@ package io.jadu.pages.presentation.screens
 
 import android.net.Uri
 import android.util.Log
+import android.widget.Space
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
@@ -15,6 +18,7 @@ import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.CircularProgressIndicator
@@ -49,6 +53,7 @@ import io.jadu.pages.domain.model.Notes
 import io.jadu.pages.presentation.components.CustomFab
 import io.jadu.pages.presentation.components.HomeTopAppBar
 import io.jadu.pages.presentation.components.DraggableNoteCard
+import io.jadu.pages.presentation.components.NoteCard
 import io.jadu.pages.presentation.navigation.NavigationItem
 import io.jadu.pages.presentation.viewmodel.NotesViewModel
 import io.jadu.pages.ui.theme.ButtonBlue
@@ -64,7 +69,7 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController) {
     val limit = 15
     var isLoading by remember { mutableStateOf(false) }
     val notePositions = remember { mutableStateListOf<Rect>() }
-    val selectedNotes by remember { mutableStateOf(mutableSetOf<Notes>()) }
+    val selectedNotes = remember { mutableStateListOf<Notes>() }
     val updatedNotes = viewModel.updatedNotes.collectAsState(initial = emptyList()).value
     var isMenuExpanded by remember { mutableStateOf(false) }
 
@@ -119,12 +124,25 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController) {
             bottom = 0.dp
         ),
         floatingActionButton = {
-            CustomFab(
-                onClick = { navHostController.navigate(NavigationItem.CreateNotes.route) },
-                icon = Icons.Default.Add,
-                contentDescription = "Add Note",
-                backgroundColor = ButtonBlue
-            )
+            Column() {
+                if(selectedNotes.isNotEmpty()) {
+                    CustomFab(
+                        onClick = { deleteSelectedNotes() },
+                        icon = Icons.Default.Delete,
+                        contentDescription = "Delete Note",
+                        backgroundColor = Color.Red
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+                CustomFab(
+                    onClick = { navHostController.navigate(NavigationItem.CreateNotes.route) },
+                    icon = Icons.Default.Add,
+                    contentDescription = "Add Note",
+                    backgroundColor = ButtonBlue
+                )
+
+            }
+
         }
     ) { innerPadding ->
         if(isMenuExpanded){
@@ -157,21 +175,29 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController) {
                                     }
                                 }
                         ) {
-                            DraggableNoteCard(
+                            NoteCard(note = note, navHostController = navHostController, onLongPress = { selectednote->
+                                if (selectedNotes.contains(selectednote)) {
+                                    selectedNotes.remove(selectednote)
+                                } else {
+                                    Log.d("HomePage", "SelectedNote: $selectednote")
+                                    selectedNotes.add(selectednote)
+                                }
+                            }, isSelected = selectedNotes.contains(note))
+
+                            /*DraggableNoteCard(
                                 note = note,
                                 notes = notes,
                                 onSwapNotes = { draggedNote, targetNote ->
                                     swapNotes(draggedNote, targetNote)
                                 },
-                                onLongPress = { handleLongPress(note) }, // Pass long press handler
+                                onLongPress = { handleLongPress(note) },
                                 modifier = Modifier.fillMaxWidth(),
                                 navHostController = navHostController,
                                 notePositions = notePositions,
-                                isSelected = selectedNotes.contains(note) // Highlight based on selection
-                            )
+                                isSelected = selectedNotes.contains(note)
+                            )*/
                         }
                     }
-
                     item {
                         LaunchedEffect(lazyStaggeredGridState) {
                             snapshotFlow { lazyStaggeredGridState.layoutInfo.visibleItemsInfo }
@@ -185,6 +211,19 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController) {
                                         isLoading = false
                                     }
                                 }
+                        }
+                    }
+                    if(selectedNotes.isNotEmpty()){
+                        Log.d("HomePagex", "SelectedNotes: $selectedNotes")
+                        item {
+                            Column(
+                                Modifier.fillMaxSize(),
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+
+                            }
+
                         }
                     }
 

@@ -3,9 +3,11 @@ package io.jadu.pages.presentation.components
 import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -42,64 +44,73 @@ import java.util.Locale
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun NoteCard(note: Notes, navHostController: NavHostController,onLongPress : (Notes) -> Unit) {
+fun NoteCard(note: Notes, navHostController: NavHostController,onLongPress : (Notes) -> Unit, isSelected:Boolean) {
     val screenHeight = LocalConfiguration.current.screenHeightDp
-    Card(
+    val borderColor = if (isSelected) Color.White else Color.Transparent
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(max = screenHeight.dp / 3)
-            .combinedClickable (
-                onClick = { navHostController.navigate("note/${note.id}")},
-                onLongClick = {
-                   onLongPress(note)
-                },
-            )
-        ,
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = note.color?.let { parseColor(it) } ?: LightGray
-        )
+            .border(width = 2.dp, color = borderColor, shape = RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(8.dp))
     ) {
-        Column(modifier = Modifier.padding(8.dp)) {
-            Text(
-                text = note.title.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() },
-                style = TextStyle(
-                    fontFamily = MaterialTheme.typography.bodyLarge.fontFamily,
-                    fontSize = 20.sp,
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = screenHeight.dp / 3)
+                .combinedClickable(
+                    onClick = { navHostController.navigate("note/${note.id}") },
+                    onLongClick = {
+                        onLongPress(note)
+                    },
                 ),
-                fontWeight = FontWeight.Black,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 1
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = note.color?.let { parseColor(it) }
+                    ?: LightGray // Keep original color
             )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = note.description ?: "",
-                style = MaterialTheme.typography.bodyLarge,
-                color = Color.Gray,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 4
-            )
-            Spacer(modifier = Modifier.height(4.dp))
+        ) {
+            Column(modifier = Modifier.padding(8.dp)) {
+                Text(
+                    text = note.title.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() },
+                    style = TextStyle(
+                        fontFamily = MaterialTheme.typography.bodyLarge.fontFamily,
+                        fontSize = 20.sp,
+                    ),
+                    fontWeight = FontWeight.Black,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = note.description ?: "",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color.Gray,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 4
+                )
+                Spacer(modifier = Modifier.height(4.dp))
 
-            val painter = rememberAsyncImagePainter(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(note.imageUri)
-                    .build(),
-            )
-            Log.d("NoteCard", "ImageUri: ${note.imageUri}")
-            if (note.imageUri != null && note.imageUri != "null") {
-                key(note.imageUri) {
-                    Image(
-                        painter = rememberAsyncImagePainter(
-                            model = stringToUri(note.imageUri ?: "")
-                        ),
-                        contentDescription = "Note Image",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(100.dp)
-                            .clip(RoundedCornerShape(8.dp)),
-                        contentScale = ContentScale.Crop
-                    )
+                val painter = rememberAsyncImagePainter(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(note.imageUri)
+                        .build(),
+                )
+                Log.d("NoteCard", "ImageUri: ${note.imageUri}")
+                if (note.imageUri != null && note.imageUri != "null") {
+                    key(note.imageUri) {
+                        Image(
+                            painter = rememberAsyncImagePainter(
+                                model = stringToUri(note.imageUri ?: "")
+                            ),
+                            contentDescription = "Note Image",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(100.dp)
+                                .clip(RoundedCornerShape(8.dp)),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
                 }
             }
         }
