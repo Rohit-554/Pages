@@ -5,7 +5,12 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -15,15 +20,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.outlined.AutoStories
 import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.navigation.NavHostController
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -39,6 +41,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.rememberLottieComposition
 import dagger.hilt.android.AndroidEntryPoint
 import io.jadu.pages.core.Constants
 import io.jadu.pages.core.PreferencesManager
@@ -50,7 +54,6 @@ import io.jadu.pages.presentation.screens.HomePage
 import io.jadu.pages.presentation.screens.ProfilePage
 import io.jadu.pages.presentation.screens.TodoPage
 import io.jadu.pages.presentation.screens.introScreens.IntroPager
-import io.jadu.pages.presentation.screens.introScreens.IntroScreenOne
 import io.jadu.pages.presentation.screens.introScreens.IntroScreenTwo
 import io.jadu.pages.presentation.viewmodel.NotesViewModel
 import io.jadu.pages.presentation.viewmodel.TodoViewModel
@@ -62,14 +65,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        val requestPermissions =
-            registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
-
-            }
         enableEdgeToEdge()
         setContent {
             val navController = rememberNavController()
-
             PagesTheme {
                 Scaffold { padding ->
                     Spacer(modifier = Modifier.padding(padding))
@@ -91,7 +89,7 @@ fun AppNavHost(
     val context = LocalContext.current
     val preferencesManager = remember { PreferencesManager(context) }
     val isIntroScreen = preferencesManager.getBoolean(Constants.IS_INTRO_SHOWN)
-
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.story))
     NavHost(
         modifier = Modifier,
         navController = navHostController,
@@ -121,9 +119,9 @@ fun AppNavHost(
             AboutPage(navHostController)
         }
 
-        composable(NavigationItem.IntroScreenOne.route) {
-            IntroScreenOne()
-        }
+       /* composable(NavigationItem.IntroScreenOne.route) {
+            IntroScreenOne(navHostController, pagerState)
+        }*/
 
         composable(NavigationItem.IntroScreenTwo.route){
             IntroScreenTwo(navHostController)
@@ -131,6 +129,14 @@ fun AppNavHost(
 
         composable(NavigationItem.IntroPagerScreen.route){
             IntroPager(navHostController)
+        }
+
+        composable(NavigationItem.Todo.route) {
+            TodoPage(todoViewModel, navHostController)
+        }
+
+        composable(NavigationItem.Home2.route) {
+            HomePage(viewModel, navHostController)
         }
     }
 
@@ -144,6 +150,7 @@ fun AppNavHost(
 
 }
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun NotesApp(
     navHostController: NavHostController,
@@ -153,6 +160,7 @@ fun NotesApp(
     var selectedItemIndex by rememberSaveable {
         mutableIntStateOf(0)
     }
+
     val items = listOf(
         BottomNavigationItem(
             title = "Notes",
@@ -180,14 +188,21 @@ fun NotesApp(
             bottom = 0.dp
         ),
     ) { innerPadding ->
-        Column(
-            Modifier.padding(innerPadding)
-        ) {
-            when (selectedItemIndex) {
-                0 -> HomePage(viewModel, navHostController)
-                1 -> TodoPage(todoViewModel, navHostController)
+        Column(Modifier.padding(innerPadding)) {
+            AnimatedContent(
+                targetState = selectedItemIndex,
+                transitionSpec = {
+                    fadeIn(animationSpec = tween(100)) togetherWith fadeOut(animationSpec = tween(300))
+                }, label = ""
+            ) { targetIndex ->
+                when (targetIndex) {
+                    0 -> HomePage(viewModel, navHostController)
+                    1 -> TodoPage(todoViewModel, navHostController)
+                }
             }
+
         }
+
     }
 }
 

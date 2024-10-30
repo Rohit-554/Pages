@@ -51,7 +51,7 @@ fun ProfilePage(paddingValues: PaddingValues, navHostController: NavHostControll
                 navHostController = navHostController
             )
         }
-    ) {
+    ) { padding->
         Column(
             modifier = Modifier
                 .padding(paddingValues)

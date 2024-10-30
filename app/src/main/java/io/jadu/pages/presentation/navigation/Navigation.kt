@@ -9,7 +9,9 @@ package io.jadu.pages.presentation.navigation
         AboutPage,
         IntroScreenOne,
         IntroScreenTwo,
-        IntroPagerScreen
+        IntroPagerScreen,
+        Home,
+        CreateTodo,
     }
     sealed class NavigationItem(val route: String) {
         object Home : NavigationItem(Screen.Notes.name)
@@ -21,4 +23,6 @@ package io.jadu.pages.presentation.navigation
         object IntroScreenOne : NavigationItem(Screen.IntroScreenOne.name)
         object IntroScreenTwo : NavigationItem(Screen.IntroScreenTwo.name)
         object IntroPagerScreen : NavigationItem(Screen.IntroPagerScreen.name)
+        object CreateTodo : NavigationItem(Screen.CreateTodo.name)
+        object Home2 : NavigationItem(Screen.Home.name)
     }
