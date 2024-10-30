@@ -4,9 +4,7 @@ import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -24,7 +22,6 @@ import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -44,7 +41,14 @@ import java.util.Locale
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun NoteCard(note: Notes, navHostController: NavHostController,onLongPress : (Notes) -> Unit, isSelected:Boolean) {
+fun NoteCard(
+    note: Notes,
+    navHostController: NavHostController,
+    onLongPress: (Notes) -> Unit,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    multipleSelectedForDelete: Boolean,
+) {
     val screenHeight = LocalConfiguration.current.screenHeightDp
     val borderColor = if (isSelected) Color.White else Color.Transparent
     Box(
@@ -59,7 +63,14 @@ fun NoteCard(note: Notes, navHostController: NavHostController,onLongPress : (No
                 .fillMaxWidth()
                 .heightIn(max = screenHeight.dp / 3)
                 .combinedClickable(
-                    onClick = { navHostController.navigate("note/${note.id}") },
+                    onClick = {
+                        if(multipleSelectedForDelete){
+                            onClick()
+                        }else{
+                            navHostController.navigate("note/${note.id}")
+                        }
+
+                    },
                     onLongClick = {
                         onLongPress(note)
                     },

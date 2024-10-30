@@ -137,7 +137,9 @@ fun AppNavHost(
     if(!isIntroScreen){
         navHostController.navigate(NavigationItem.IntroPagerScreen.route)
     }else{
-        navHostController.navigate(NavigationItem.Home.route)
+        navHostController.navigate(NavigationItem.Home.route) {
+            popUpTo(NavigationItem.IntroPagerScreen.route) { inclusive = true }
+        }
     }
 
 }

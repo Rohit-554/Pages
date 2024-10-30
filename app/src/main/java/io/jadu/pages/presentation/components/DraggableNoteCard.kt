@@ -79,6 +79,6 @@ fun DraggableNoteCard(
             }
             .background(if (isSelected) Color.LightGray else Color.Transparent)
     ) {
-        NoteCard(note = note, navHostController = navHostController, onLongPress = {}, isSelected = false)
+        NoteCard(note = note, navHostController = navHostController, onLongPress = {}, isSelected = false , onClick = {}, multipleSelectedForDelete = false)
     }
 }

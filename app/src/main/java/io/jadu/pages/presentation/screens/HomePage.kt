@@ -2,14 +2,12 @@ package io.jadu.pages.presentation.screens
 
 import android.net.Uri
 import android.util.Log
-import android.widget.Space
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
@@ -52,7 +50,6 @@ import androidx.navigation.NavHostController
 import io.jadu.pages.domain.model.Notes
 import io.jadu.pages.presentation.components.CustomFab
 import io.jadu.pages.presentation.components.HomeTopAppBar
-import io.jadu.pages.presentation.components.DraggableNoteCard
 import io.jadu.pages.presentation.components.NoteCard
 import io.jadu.pages.presentation.navigation.NavigationItem
 import io.jadu.pages.presentation.viewmodel.NotesViewModel
@@ -72,7 +69,7 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController) {
     val selectedNotes = remember { mutableStateListOf<Notes>() }
     val updatedNotes = viewModel.updatedNotes.collectAsState(initial = emptyList()).value
     var isMenuExpanded by remember { mutableStateOf(false) }
-
+    var multipleSelectedForDelete by remember { mutableStateOf(false) }
     LaunchedEffect(key1 = notes) {
         viewModel.getNotesPaginated(limit, offset)
     }
@@ -112,7 +109,7 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController) {
                     isMenuExpanded = !isMenuExpanded
                 },
                 onSearchTextChange = { searchText ->
-                    if(searchText.isEmpty()){
+                    if (searchText.isEmpty()) {
                         viewModel.getNotesPaginated(limit, offset)
                     }
                     viewModel.searchNotes(searchText)
@@ -125,7 +122,8 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController) {
         ),
         floatingActionButton = {
             Column() {
-                if(selectedNotes.isNotEmpty()) {
+                if (selectedNotes.isNotEmpty()) {
+                    multipleSelectedForDelete = true
                     CustomFab(
                         onClick = { deleteSelectedNotes() },
                         icon = Icons.Default.Delete,
@@ -145,9 +143,14 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController) {
 
         }
     ) { innerPadding ->
-        if(isMenuExpanded){
-            Box(modifier = Modifier.padding(innerPadding).fillMaxSize(), contentAlignment = Alignment.TopEnd) {
-                FloatingActionMenu(isMenuExpanded,navHostController) { isMenuExpanded = false}
+        if (isMenuExpanded) {
+            Box(
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize(),
+                contentAlignment = Alignment.TopEnd
+            ) {
+                FloatingActionMenu(isMenuExpanded, navHostController) { isMenuExpanded = false }
             }
         }
         Column(
@@ -175,15 +178,23 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController) {
                                     }
                                 }
                         ) {
-                            NoteCard(note = note, navHostController = navHostController, onLongPress = { selectednote->
-                                if (selectedNotes.contains(selectednote)) {
-                                    selectedNotes.remove(selectednote)
-                                } else {
-                                    Log.d("HomePage", "SelectedNote: $selectednote")
-                                    selectedNotes.add(selectednote)
-                                }
-                            }, isSelected = selectedNotes.contains(note))
-
+                            NoteCard(
+                                note = note,
+                                navHostController = navHostController,
+                                onLongPress = { selectedNote ->
+                                    selectedNotes.clear()
+                                    selectedNotes.add(selectedNote)
+                                },
+                                onClick = {
+                                    if (selectedNotes.contains(note)) {
+                                        selectedNotes.remove(note)
+                                    } else {
+                                        selectedNotes.add(note)
+                                    }
+                                },
+                                isSelected = selectedNotes.contains(note),
+                                multipleSelectedForDelete = multipleSelectedForDelete
+                            )
                             /*DraggableNoteCard(
                                 note = note,
                                 notes = notes,
@@ -213,7 +224,7 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController) {
                                 }
                         }
                     }
-                    if(selectedNotes.isNotEmpty()){
+                    if (selectedNotes.isNotEmpty()) {
                         Log.d("HomePagex", "SelectedNotes: $selectedNotes")
                         item {
                             Column(
