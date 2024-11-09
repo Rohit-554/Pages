@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PushPin
+import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -106,10 +107,10 @@ fun NoteCard(
                     if(note.isPinned){
                         Spacer(modifier = Modifier.weight(1f))
                         Icon(
-                            imageVector = Icons.Default.PushPin,
+                            imageVector = Icons.Outlined.PushPin,
                             contentDescription = "Pinned",
                             modifier = Modifier.padding(start = 4.dp).size(16.dp),
-                            tint = Color.Gray
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }

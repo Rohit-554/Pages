@@ -115,6 +115,7 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController, on
 
     LaunchedEffect(selectedNotes) {
         onCardSelected(selectedNotes.isNotEmpty())
+        multipleSelectedForDelete = selectedNotes.isNotEmpty()
     }
 
     fun swapNotes(note1: Notes, note2: Notes) {
@@ -196,8 +197,9 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController, on
                             selectedNotes.forEach { note ->
                                 viewModel.updateNotes(note.title, note.description, note.imageUri, note.id, note.color, !allSelectedPinned)
                             }
-                            Toast.makeText(context, if(allSelectedPinned) "Unpinned Successfully" else "Pinned Sucessfully", Toast.LENGTH_SHORT).show()
                             selectedNotes.clear()
+                            multipleSelectedForDelete = false
+                            Toast.makeText(context, if(allSelectedPinned) "Unpinned Successfully" else "Pinned Sucessfully", Toast.LENGTH_SHORT).show()
                         },
                         icon = if (allSelectedPinned) Icons.Filled.PushPin  else Icons.Outlined.PushPin,
                         contentDescription = "Pinned notes",
@@ -250,22 +252,12 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController, on
                     if (pinnedNotes.isNotEmpty()) {
 
                         itemsIndexed(pinnedNotes) { index, note ->
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp)
-                            ) {
                                 ShowNotes(note, navHostController, selectedNotes, multipleSelectedForDelete)
-                            }
                         }
                     }
                     if (unpinnedNotes.isNotEmpty()) {
                         itemsIndexed(unpinnedNotes) { index, note ->
-                            Box(
-                                modifier = Modifier
-                            ) {
                                 ShowNotes(note, navHostController, selectedNotes, multipleSelectedForDelete)
-                            }
                         }
                     }
 
