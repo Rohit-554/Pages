@@ -60,7 +60,7 @@ fun AboutPage(navHostController: NavHostController) {
                         horizontalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            text = "Made With ❤️ by Jadu",
+                            text = "Made With ❤️ by Strawberry Studios",
                             fontSize = 16.sp,
                             modifier = Modifier.padding(top = 16.dp)
                         )

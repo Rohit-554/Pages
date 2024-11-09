@@ -142,7 +142,7 @@ fun AddNewPage(
                             viewModel.deleteNotes(notesId)
                             coroutineScope.launch {
                                 snackbarHostState.showSnackbar(
-                                    "Delted Successfully",
+                                    "Deleted Successfully",
                                     duration = SnackbarDuration.Short
                                 )
                             }
@@ -243,7 +243,6 @@ fun AddNewPage(
                         .fillMaxHeight(),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-
                     item {
                         CustomInputFields(
                             text = title.text,
@@ -254,7 +253,6 @@ fun AddNewPage(
                                 .padding(8.dp)
                         )
                     }
-
                     item {
                         HorizontalDivider(
                             color = LightGray,
@@ -262,7 +260,6 @@ fun AddNewPage(
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
-
                     item {
                         CustomInputFields(
                             text = description.text,
@@ -292,7 +289,6 @@ fun AddNewPage(
                             }
                         )
                     }
-
                     if(selectedImageUri!=null && selectedImageUri.toString() != "null"){
                         item {
                             Box {
@@ -326,8 +322,6 @@ fun AddNewPage(
                             }
                         }
                     }
-
-
                 }
             }
         },

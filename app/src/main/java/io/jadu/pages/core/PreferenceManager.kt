@@ -22,4 +22,14 @@ class PreferencesManager(context: Context) {
     fun getBoolean(key: String): Boolean {
         return sharedPreferences.getBoolean(key, false)
     }
+
+    fun getString(id:String): String? {
+        return sharedPreferences.getString(id, null)
+    }
+
+    fun putString(id:String, value: String) {
+        sharedPreferences.edit().putString(id, value).apply()
+    }
+
+
 }

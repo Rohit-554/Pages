@@ -52,6 +52,7 @@ import io.jadu.pages.presentation.navigation.NavigationItem
 import io.jadu.pages.presentation.screens.AboutPage
 import io.jadu.pages.presentation.screens.HomePage
 import io.jadu.pages.presentation.screens.ProfilePage
+import io.jadu.pages.presentation.screens.SettingsPage
 import io.jadu.pages.presentation.screens.TodoPage
 import io.jadu.pages.presentation.screens.introScreens.IntroPager
 import io.jadu.pages.presentation.screens.introScreens.IntroScreenTwo
@@ -112,7 +113,8 @@ fun AppNavHost(
         }
 
         composable(NavigationItem.ProfilePage.route) {
-            ProfilePage(PaddingValues(8.dp), navHostController)
+            SettingsPage(navHostController)
+            //ProfilePage(PaddingValues(8.dp), navHostController)
         }
 
         composable(NavigationItem.AboutPage.route) {

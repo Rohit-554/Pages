@@ -1,7 +1,5 @@
 package io.jadu.pages.presentation.screens
 
-
-
 import android.content.Context
 import android.content.SharedPreferences
 import android.preference.PreferenceManager
@@ -87,7 +85,9 @@ fun ProfilePage(paddingValues: PaddingValues, navHostController: NavHostControll
                 ) {
                     TextField(
                         value = name,
-                        onValueChange = { name = it },
+                        onValueChange = {
+                            name = it
+                        },
                         label = null,
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color.Transparent,
