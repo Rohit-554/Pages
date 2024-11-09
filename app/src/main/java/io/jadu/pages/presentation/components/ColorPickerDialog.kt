@@ -99,17 +99,17 @@ fun ColorPickerDialog(
 
 
                     val colorPalette = listOf(
-                        Color(0xFFEF9A9A).copy(alpha = 0.9f), // Muted Coral Red
-                        Color(0xFFFFAB91).copy(alpha = 0.9f), // Soft Orange
-                        Color(0xFFFFCC80).copy(alpha = 0.9f), // Light Amber
-                        Color(0xFFE6EE9C).copy(alpha = 0.9f), // Pale Lime Green
-                        Color(0xFFA5D6A7).copy(alpha = 0.9f), // Soft Mint Green
-                        Color(0xFF80CBC4).copy(alpha = 0.9f), // Light Teal
-                        Color(0xFF81D4FA).copy(alpha = 0.9f), // Soft Sky Blue
-                        Color(0xFF90CAF9).copy(alpha = 0.9f), // Pale Light Blue
-                        Color(0xFFB39DDB).copy(alpha = 0.9f), // Muted Lavender
-                        Color(0xFFFFF59D).copy(alpha = 0.9f), // Soft Yellow
-                        Color(0xFFCE93D8).copy(alpha = 0.9f)  // Light Purple
+                        Color(0xFFEF9A9A).copy(alpha = 0.7f), // Muted Coral Red
+                        Color(0xFFFFAB91).copy(alpha = 0.7f), // Soft Orange
+                        Color(0xFFFFCC80).copy(alpha = 0.7f), // Light Amber
+                        Color(0xFFE6EE9C).copy(alpha = 0.4f), // Pale Lime Green
+                        Color(0xFFA5D6A7).copy(alpha = 0.2f), // Soft Mint Green
+                        Color(0xFF80CBC4).copy(alpha = 0.7f), // Light Teal
+                        Color(0xFF81D4FA).copy(alpha = 0.7f), // Soft Sky Blue
+                        Color(0xFF90CAF9).copy(alpha = 0.7f), // Pale Light Blue
+                        Color(0xFFB39DDB).copy(alpha = 0.7f), // Muted Lavender
+                        Color(0xFFFFF59D).copy(alpha = 0.7f), // Soft Yellow
+                        Color(0xFFCE93D8).copy(alpha = 0.7f)  // Light Purple
                     )
 
 

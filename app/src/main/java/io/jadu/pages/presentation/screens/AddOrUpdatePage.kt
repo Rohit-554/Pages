@@ -271,7 +271,7 @@ fun AddNewPage(
                             textStyle = TextStyle(
                                 color = Color.White,
                                 fontFamily = MaterialTheme.typography.bodyLarge.fontFamily,
-                                fontSize = 16.sp
+                                fontSize = 20.sp
                             ),
                             singleLine = false,
                             modifier = Modifier

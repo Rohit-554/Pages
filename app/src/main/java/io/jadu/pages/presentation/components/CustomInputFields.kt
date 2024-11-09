@@ -40,7 +40,7 @@ fun CustomInputFields(
             if (text.isEmpty()) {
                 Text(
                     text = hintText,
-                    color = Color.Gray,
+                    color = Color.White.copy(alpha = 0.7f),
                     style = textStyle
                 )
             }

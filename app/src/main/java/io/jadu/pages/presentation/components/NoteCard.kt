@@ -116,8 +116,12 @@ fun NoteCard(
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = note.description ?: "",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color.Gray,
+                    style = TextStyle(
+                        fontFamily = MaterialTheme.typography.bodyLarge.fontFamily,
+                        fontSize = 16.sp,
+                    ),
+                    color = Color.White.copy(alpha = 0.5f),
+                    fontWeight = FontWeight.W600,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 4
                 )
