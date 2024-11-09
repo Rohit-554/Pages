@@ -71,6 +71,7 @@ fun AddNewPage(
     var selectedImage by remember { mutableStateOf<String?>(null) }
     var areFieldEmpty by remember { mutableStateOf(false) }
     var showColorPickerDialog by remember { mutableStateOf(false) }
+    var isPinned by remember { mutableStateOf(false) }
 
 
     LaunchedEffect(notesId, notes) {
@@ -81,6 +82,7 @@ fun AddNewPage(
                 description = TextFieldValue(note.description ?: "")
                 selectedColor = note.color?.let { parseColor(it) } ?: defaultColor
                 selectedImageUri = note.imageUri?.let { Uri.parse(it) }
+                isPinned = note.isPinned
             }
         }
     }
@@ -189,18 +191,19 @@ fun AddNewPage(
                         }
                         val newNote = Notes(
                             id = System.currentTimeMillis(),
-                            title = title.text,
-                            description = description.text,
+                            title = title.text.trim(),
+                            description = description.text.trim(),
                             color = if (selectedColor != defaultColor) selectedColor.toString() else null,
                             imageUri = selectedImageUri.toString()
                         )
                         if(notesId != 0L && notesId != null){
                             viewModel.updateNotes(
-                                title = title.text,
-                                description = description.text,
+                                title = title.text.trim(),
+                                description = description.text.trim(),
                                 imageUri = selectedImageUri.toString(),
                                 notesId = notesId,
-                                color = if (selectedColor != defaultColor) selectedColor.toString() else null
+                                color = if (selectedColor != defaultColor) selectedColor.toString() else null,
+                                isPinned = isPinned
                             )
                             coroutineScope.launch {
                                 snackbarHostState.showSnackbar(

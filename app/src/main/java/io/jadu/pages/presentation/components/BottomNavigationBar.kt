@@ -15,7 +15,7 @@ import io.jadu.pages.domain.model.BottomNavigationItem
 fun BottomNavigationBar(
     items: List<BottomNavigationItem>,
     selectedItemIndex: Int,
-    onItemSelected: (Int) -> Unit
+    onItemSelected: (Int) -> Unit,
 ) {
     NavigationBar {
         items.forEachIndexed { index, item ->

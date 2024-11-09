@@ -120,6 +120,7 @@ fun SettingsPage(navHostController: NavHostController) {
             focusRequester.requestFocus()
         }
     }
+
     val openDocumentLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
@@ -129,7 +130,6 @@ fun SettingsPage(navHostController: NavHostController) {
                 uri,
                 Intent.FLAG_GRANT_READ_URI_PERMISSION
             )
-
             selectedImageUri = uri
             preferencesManager.putString(Constants.GET_IMAGE, uri.toString())
         }
@@ -497,22 +497,11 @@ fun SettingsPage(navHostController: NavHostController) {
                     }
                 }
             }
-
-            // Card positioned 50% in Area A and 50% in Area B
-
         }
     }
 
 
 
-}
-
-private fun getUri(context: Context, uri: Uri) {
-    val contentResolver = context.contentResolver
-    contentResolver.takePersistableUriPermission(
-        uri,
-        Intent.FLAG_GRANT_READ_URI_PERMISSION
-    )
 }
 
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)

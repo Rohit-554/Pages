@@ -14,6 +14,7 @@ hiltAndroidCompiler = "2.48"
 kotlinxSerializationJson = "1.7.1"
 
 materialIconsExtended = "1.7.3"
+materialIconsExtendedVersion = "1.7.5"
 navigationCompose = "2.8.2"
 navigationComposeVersion = "2.8.3"
 roomCompiler = "2.6.1"
@@ -24,6 +25,7 @@ uiTextGoogleFontsVersion = "1.7.4"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-material-icons-extended-v175 = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtendedVersion" }
 androidx-navigation-compose-v283 = { module = "androidx.navigation:navigation-compose", version.ref = "navigationComposeVersion" }
 androidx-ui-text-google-fonts-v174 = { module = "androidx.compose.ui:ui-text-google-fonts", version.ref = "uiTextGoogleFontsVersion" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }

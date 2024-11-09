@@ -17,8 +17,8 @@ class NotesRepositoryImpl @Inject constructor(
         notesDao.addNotes(note)
     }
 
-    override suspend fun updateNotes(title:String, description: String?, imageUri: String?, notesId: Long, color:String?) {
-        notesDao.updateNotes(notesId, title, description, imageUri, color)
+    override suspend fun updateNotes(title:String, description: String?, imageUri: String?, notesId: Long, color:String?, isPinned:Boolean) {
+        notesDao.updateNotes(notesId, title, description, imageUri, color, isPinned)
     }
 
     override suspend fun deleteNotes(noteId: Long) {

@@ -19,8 +19,8 @@ interface NotesDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun addNotes(note: Notes)
 
-    @Query("UPDATE notes SET title = :title, description = :description, imageUri = :imageUri, color = :color  WHERE id = :notesId")
-    suspend fun updateNotes(notesId: Long, title: String, description: String?, imageUri: String?, color: String?)
+    @Query("UPDATE notes SET title = :title, description = :description, imageUri = :imageUri, color = :color, isPinned = :isPinned  WHERE id = :notesId")
+    suspend fun updateNotes(notesId: Long, title: String, description: String?, imageUri: String?, color: String?, isPinned:Boolean)
 
     @Query("DELETE FROM notes WHERE id = :noteId")
     suspend fun deleteNote(noteId: Long)

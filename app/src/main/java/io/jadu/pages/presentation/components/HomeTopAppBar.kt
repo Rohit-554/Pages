@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -86,7 +87,7 @@ fun HomeTopAppBar(
                         Icon(imageVector = Icons.Filled.Search, contentDescription = "Search")
                     }
                     IconButton(onClick = onMenuClick) {
-                        Icon(imageVector = Icons.Filled.MoreVert, contentDescription = "Menu")
+                        Icon(imageVector = Icons.Filled.Settings, contentDescription = "Menu")
                     }
                 }
             }

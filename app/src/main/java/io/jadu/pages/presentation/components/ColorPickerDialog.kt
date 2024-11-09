@@ -99,18 +99,19 @@ fun ColorPickerDialog(
 
 
                     val colorPalette = listOf(
-                        Color(0xFFFFCDD2).copy(alpha = 0.9f), // Light Red
-                        Color(0xFFC8E6C9).copy(alpha = 0.9f), // Light Green
-                        Color(0xFFBBDEFB).copy(alpha = 0.9f), // Light Blue
-                        Color(0xFFFFF9C4).copy(alpha = 0.9f), // Light Yellow
-                        Color(0xFFE1BEE7).copy(alpha = 0.9f), // Light Magenta
-                        Color(0xFFB2EBF2).copy(alpha = 0.9f), // Light Cyan
-                        Color(0xFFFFF8E1).copy(alpha = 0.9f), // Light Cream
-                        Color(0xFFCFD8DC).copy(alpha = 0.9f), // Light Gray Blue
-                        Color(0xFFFFFFFF).copy(alpha = 0.9f), // White
-                        Color(0xFFF5F5F5).copy(alpha = 0.9f), // Light Gray
-                        Color(0xFFE0E0E0).copy(alpha = 0.9f)  // Very Light Gray
+                        Color(0xFFEF9A9A).copy(alpha = 0.9f), // Muted Coral Red
+                        Color(0xFFFFAB91).copy(alpha = 0.9f), // Soft Orange
+                        Color(0xFFFFCC80).copy(alpha = 0.9f), // Light Amber
+                        Color(0xFFE6EE9C).copy(alpha = 0.9f), // Pale Lime Green
+                        Color(0xFFA5D6A7).copy(alpha = 0.9f), // Soft Mint Green
+                        Color(0xFF80CBC4).copy(alpha = 0.9f), // Light Teal
+                        Color(0xFF81D4FA).copy(alpha = 0.9f), // Soft Sky Blue
+                        Color(0xFF90CAF9).copy(alpha = 0.9f), // Pale Light Blue
+                        Color(0xFFB39DDB).copy(alpha = 0.9f), // Muted Lavender
+                        Color(0xFFFFF59D).copy(alpha = 0.9f), // Soft Yellow
+                        Color(0xFFCE93D8).copy(alpha = 0.9f)  // Light Purple
                     )
+
 
 
                     LazyVerticalGrid(

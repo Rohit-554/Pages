@@ -50,9 +50,10 @@ class NotesViewModel @Inject constructor(
         description: String?,
         imageUri: String?,
         notesId: Long,
-        color: String?
+        color: String?,
+        isPinned: Boolean
     ) = viewModelScope.launch {
-        updateNotesUseCase.invoke(title, description, imageUri, notesId, color)
+        updateNotesUseCase.invoke(title, description, imageUri, notesId, color, isPinned)
         //getNotesPaginated(10, 0)
     }
 

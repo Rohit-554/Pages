@@ -28,6 +28,7 @@ import androidx.navigation.NavHostController
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -112,7 +113,7 @@ fun AppNavHost(
             AddNewPage(viewModel, navHostController, nodeId)
         }
 
-        composable(NavigationItem.ProfilePage.route) {
+        composable(NavigationItem.SettingsPage.route) {
             SettingsPage(navHostController)
             //ProfilePage(PaddingValues(8.dp), navHostController)
         }
@@ -138,8 +139,10 @@ fun AppNavHost(
         }
 
         composable(NavigationItem.Home2.route) {
-            HomePage(viewModel, navHostController)
+            HomePage(viewModel, navHostController, onCardSelected = {})
         }
+
+
     }
 
     if(!isIntroScreen){
@@ -159,6 +162,9 @@ fun NotesApp(
     viewModel: NotesViewModel,
     todoViewModel: TodoViewModel
 ) {
+    /*var onCardSelected by remember {
+        mutableStateOf(false)
+    }*/
     var selectedItemIndex by rememberSaveable {
         mutableIntStateOf(0)
     }
@@ -181,9 +187,9 @@ fun NotesApp(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
-            BottomNavigationBar(items, selectedItemIndex) {
-                selectedItemIndex = it
-            }
+            BottomNavigationBar(items, selectedItemIndex
+            , onItemSelected = {selectedItemIndex = it}
+            )
         },
         contentWindowInsets = WindowInsets(
             top = 0.dp,
@@ -198,13 +204,12 @@ fun NotesApp(
                 }, label = ""
             ) { targetIndex ->
                 when (targetIndex) {
-                    0 -> HomePage(viewModel, navHostController)
+                    0 -> HomePage(viewModel, navHostController, onCardSelected = {})
                     1 -> TodoPage(todoViewModel, navHostController)
                 }
             }
 
         }
-
     }
 }
 

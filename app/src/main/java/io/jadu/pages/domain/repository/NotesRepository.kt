@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 interface NotesRepository {
     fun getNotesPaginated(limit: Int, offset: Int): Flow<List<Notes>>
     suspend fun addNotes(note: Notes)
-    suspend fun updateNotes(title: String, description: String?, imageUri: String?, notesId:Long, color: String?)
+    suspend fun updateNotes(title: String, description: String?, imageUri: String?, notesId:Long, color: String?,isPinned:Boolean)
     suspend fun deleteNotes(noteId: Long)
     suspend fun updateNotesPosition(id: Long, position: Int)
     suspend fun searchNotes(searchText: String): Flow<List<Notes>>

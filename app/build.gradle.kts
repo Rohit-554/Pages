@@ -83,7 +83,7 @@ dependencies {
     //Google Fonts
     implementation(libs.androidx.ui.text.google.fonts.v174)
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
-    implementation ("androidx.compose.material:material-icons-extended:1.7.4")
+    implementation (libs.androidx.material.icons.extended.v175)
     implementation ("io.coil-kt:coil-compose:2.1.0")
     implementation("androidx.compose.material3:material3:1.3.0")
     implementation("androidx.compose.material:material:1.7.4")
