@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ColorLens
+import androidx.compose.material.icons.filled.Draw
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.InvertColors
@@ -40,7 +41,7 @@ import io.jadu.pages.ui.theme.ButtonBlue
 import io.jadu.pages.ui.theme.LightGray
 
 @Composable
-fun EditPageBottomAppBar(onImagePickClick : () -> Unit, onColorPickClick : () -> Unit) {
+fun EditPageBottomAppBar(onImagePickClick : () -> Unit, onColorPickClick : () -> Unit, onDrawClick : () -> Unit) {
     var isExpanded by remember { mutableStateOf(false) }
     Box(
         contentAlignment = Alignment.CenterEnd,
@@ -65,6 +66,13 @@ fun EditPageBottomAppBar(onImagePickClick : () -> Unit, onColorPickClick : () ->
                         },
                         icon = Icons.Filled.Image,
                         contentDescription = "Camera",
+                    )
+                    CustomFab(
+                        onClick = {
+                            onDrawClick()
+                        },
+                        icon = Icons.Filled.Draw,
+                        contentDescription = "Draw",
                     )
                     CustomFab(
                         onClick = {

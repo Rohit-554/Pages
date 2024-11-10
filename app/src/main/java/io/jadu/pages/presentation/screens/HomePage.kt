@@ -250,7 +250,6 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController, on
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     if (pinnedNotes.isNotEmpty()) {
-
                         itemsIndexed(pinnedNotes) { index, note ->
                                 ShowNotes(note, navHostController, selectedNotes, multipleSelectedForDelete)
                         }

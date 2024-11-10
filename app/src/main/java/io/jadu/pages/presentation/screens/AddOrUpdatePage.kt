@@ -41,6 +41,7 @@ import io.jadu.pages.presentation.components.CustomTopAppBar
 import io.jadu.pages.presentation.components.EditPageBottomAppBar
 import io.jadu.pages.presentation.components.SaveFab
 import io.jadu.pages.presentation.components.imeListener
+import io.jadu.pages.presentation.navigation.NavigationItem
 import io.jadu.pages.presentation.screens.parseColor
 import io.jadu.pages.presentation.viewmodel.NotesViewModel
 import io.jadu.pages.ui.theme.Black
@@ -174,6 +175,9 @@ fun AddNewPage(
                     },
                     onColorPickClick = {
                         showColorPickerDialog = true
+                    },
+                    onDrawClick = {
+                        navHostController.navigate(NavigationItem.DrawPage.route)
                     }
                 )
                 Spacer(modifier = Modifier.height(8.dp))

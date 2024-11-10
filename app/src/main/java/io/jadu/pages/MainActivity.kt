@@ -55,6 +55,7 @@ import io.jadu.pages.presentation.screens.HomePage
 import io.jadu.pages.presentation.screens.ProfilePage
 import io.jadu.pages.presentation.screens.SettingsPage
 import io.jadu.pages.presentation.screens.TodoPage
+import io.jadu.pages.presentation.screens.draw.DrawingApp
 import io.jadu.pages.presentation.screens.introScreens.IntroPager
 import io.jadu.pages.presentation.screens.introScreens.IntroScreenTwo
 import io.jadu.pages.presentation.viewmodel.NotesViewModel
@@ -142,6 +143,9 @@ fun AppNavHost(
             HomePage(viewModel, navHostController, onCardSelected = {})
         }
 
+        composable(NavigationItem.DrawPage.route) {
+            DrawingApp(PaddingValues(8.dp), navHostController)
+        }
 
     }
 
