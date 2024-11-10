@@ -3,9 +3,19 @@ package io.jadu.pages.presentation.screens.draw
 import android.graphics.Paint
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -17,6 +27,7 @@ import androidx.compose.ui.input.pointer.consumeDownChange
 import androidx.compose.ui.input.pointer.consumePositionChange
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.smarttoolfactory.composedrawingapp.DrawMode
@@ -25,10 +36,13 @@ import io.jadu.pages.presentation.components.CustomTopAppBar
 import io.jadu.pages.presentation.screens.draw.gesture.MotionEvent
 import io.jadu.pages.presentation.screens.draw.gesture.dragMotionEvent
 import io.jadu.pages.presentation.screens.draw.menu.DrawingPropertiesMenu
+import io.jadu.pages.ui.theme.TickColor
+import io.jadu.pages.ui.theme.White
 import io.jadu.pages.ui.theme.backgroundColor
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DrawingApp(paddingValues: PaddingValues,navHostController: NavHostController) {
+fun DrawingApp(paddingValues: PaddingValues, navHostController: NavHostController, pathClick : (List<Pair<Path, PathProperties>>) -> Unit) {
 
     val context = LocalContext.current
     val paths = remember { mutableStateListOf<Pair<Path, PathProperties>>() }
@@ -49,12 +63,39 @@ fun DrawingApp(paddingValues: PaddingValues,navHostController: NavHostController
 
     Scaffold(
         topBar = {
-            CustomTopAppBar(
-                title = "Draw",
-                navHostController = navHostController,
-                )
+            TopAppBar(
+                title = {
+                    Text(
+                        "Draw",
+                        style = TextStyle(
+                            fontFamily = MaterialTheme.typography.bodyLarge.fontFamily,
+                            fontSize = MaterialTheme.typography.titleLarge.fontSize
+                        )
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navHostController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                },
+                actions = {
+                    Icon(
+                        imageVector = Icons.Filled.Check,
+                        contentDescription = "Save",
+                        modifier = Modifier.padding(8.dp).clickable {
+                            pathClick(paths)
+                            navHostController.popBackStack()
+                        },
+                        tint = TickColor
+                    )
+                }
+
+            )
         }
-    )  { padValue->
+    ) { padValue ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -237,7 +278,6 @@ fun DrawingApp(paddingValues: PaddingValues,navHostController: NavHostController
                 },
                 onRedo = {
                     if (pathsUndone.isNotEmpty()) {
-
                         val lastPath = pathsUndone.last().first
                         val lastPathProperty = pathsUndone.last().second
                         pathsUndone.removeAt(pathsUndone.lastIndex)

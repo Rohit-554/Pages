@@ -1,7 +1,9 @@
 package io.jadu.pages.presentation.screens.draw.menu
 
+import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
@@ -27,11 +29,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -42,8 +46,11 @@ import com.smarttoolfactory.composedrawingapp.*
 import io.jadu.pages.presentation.screens.draw.ColorSlider
 import io.jadu.pages.presentation.screens.draw.ColorWheel
 import io.jadu.pages.R
+import io.jadu.pages.core.Utils
 import io.jadu.pages.domain.model.PathProperties
 import io.jadu.pages.ui.theme.Blue400
+import io.jadu.pages.ui.theme.gradientColors
+import kotlin.math.atan2
 import kotlin.math.roundToInt
 
 @Composable
@@ -319,11 +326,33 @@ fun ColorSelectionDialog(
                             )
                     )
                 }
-
                 ColorWheel(
                     modifier = Modifier
                         .width(widthInDp * .8f)
                         .aspectRatio(1f)
+                        .pointerInput(Unit) {
+                            detectTapGestures { tapOffset ->
+                                val distanceFromCenter = (tapOffset - Offset((size.width / 2).toFloat(),
+                                    (size.height / 2).toFloat()
+                                )).getDistance()
+                                val radius = size.width / 2f
+
+                                if (distanceFromCenter <= radius) {
+                                    val angle = (Math.toDegrees(
+                                        atan2(
+                                            tapOffset.y - size.height / 2,
+                                            tapOffset.x - size.width / 2
+                                        ).toDouble()
+                                    ) + 360) % 360
+
+                                    val colorIndex = (angle / 360 * gradientColors.size).toInt()
+                                    val selectedColor = gradientColors[colorIndex % gradientColors.size]
+                                    red = (selectedColor.red * 255)
+                                    green = (selectedColor.green * 255)
+                                    blue = (selectedColor.blue * 255)
+                                }
+                            }
+                        }
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -415,6 +444,7 @@ fun ColorSelectionDialog(
         }
     }
 }
+
 
 /**
  * Expandable selection menu

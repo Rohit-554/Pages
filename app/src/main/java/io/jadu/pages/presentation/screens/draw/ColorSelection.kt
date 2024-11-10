@@ -42,7 +42,6 @@ fun ColorWheel(modifier: Modifier = Modifier) {
         val strokeWidth = canvasRadius * .3f
         // Stroke is drawn out of the radius, so it's required to subtract stroke width from radius
         val radius = canvasRadius - strokeWidth
-
         drawCircle(
             brush = Brush.sweepGradient(colors = gradientColors, center = center),
             radius = radius,

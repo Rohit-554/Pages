@@ -9,21 +9,28 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -34,6 +41,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import io.jadu.pages.domain.model.Notes
+import io.jadu.pages.domain.model.PathProperties
 import io.jadu.pages.presentation.components.ColorPickerDialog
 import io.jadu.pages.presentation.components.CustomInputFields
 import io.jadu.pages.presentation.components.CustomSnackBar
@@ -54,7 +62,8 @@ import kotlinx.coroutines.launch
 fun AddNewPage(
     viewModel: NotesViewModel,
     navHostController: NavHostController,
-    notesId: Long? = 0L
+    notesId: Long? = 0L,
+    drawPath: List<Pair<Path, PathProperties>>
 ) {
     val imeState = imeListener()
     val scrollState = rememberScrollState()
@@ -73,7 +82,7 @@ fun AddNewPage(
     var areFieldEmpty by remember { mutableStateOf(false) }
     var showColorPickerDialog by remember { mutableStateOf(false) }
     var isPinned by remember { mutableStateOf(false) }
-
+    var drawPathLines by remember { mutableStateOf(drawPath) }
 
     LaunchedEffect(notesId, notes) {
         if (notesId != 0L) {
@@ -87,7 +96,6 @@ fun AddNewPage(
             }
         }
     }
-
     val openDocumentLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
@@ -329,6 +337,13 @@ fun AddNewPage(
                             }
                         }
                     }
+                    if(drawPathLines.isNotEmpty()){
+                        item {
+                            DisplayPaths(drawPathLines, onClose = {
+                                drawPathLines = emptyList()
+                            })
+                        }
+                    }
                 }
             }
         },
@@ -341,6 +356,59 @@ fun AddNewPage(
         }
     )
 }
+
+@Composable
+fun DisplayPaths(paths: List<Pair<Path, PathProperties>>, onClose: () -> Unit) {
+    val pathBounds = remember(paths) {
+        paths.fold(Rect(0f, 0f, 0f, 0f)) { acc, pair ->
+            val pathBounds = pair.first.getBounds()
+            Rect(
+                left = minOf(acc.left, pathBounds.left),
+                top = minOf(acc.top, pathBounds.top),
+                right = maxOf(acc.right, pathBounds.right),
+                bottom = maxOf(acc.bottom, pathBounds.bottom)
+            )
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = pathBounds.height.dp)
+    ) {
+        // Canvas to draw paths
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            drawRect(
+                color = Color.Gray.copy(alpha = 0.3f),
+                size = Size(pathBounds.width, pathBounds.height),
+                topLeft = pathBounds.topLeft,
+                style = Stroke(width = 2f)
+            )
+
+            // Draw all paths
+            paths.forEach { (path, properties) ->
+                drawPath(
+                    path = path,
+                    color = properties.color,
+                    style = Stroke(width = properties.strokeWidth)
+                )
+            }
+        }
+
+        IconButton(
+            onClick = { onClose() },
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 8.dp, end = 8.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Close"
+            )
+        }
+    }
+}
+
 
 
 fun checkIfFieldEmpty(fieldKey: String): Boolean {

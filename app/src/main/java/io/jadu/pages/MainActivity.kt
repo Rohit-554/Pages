@@ -33,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
@@ -48,11 +49,11 @@ import dagger.hilt.android.AndroidEntryPoint
 import io.jadu.pages.core.Constants
 import io.jadu.pages.core.PreferencesManager
 import io.jadu.pages.domain.model.BottomNavigationItem
+import io.jadu.pages.domain.model.PathProperties
 import io.jadu.pages.presentation.components.BottomNavigationBar
 import io.jadu.pages.presentation.navigation.NavigationItem
 import io.jadu.pages.presentation.screens.AboutPage
 import io.jadu.pages.presentation.screens.HomePage
-import io.jadu.pages.presentation.screens.ProfilePage
 import io.jadu.pages.presentation.screens.SettingsPage
 import io.jadu.pages.presentation.screens.TodoPage
 import io.jadu.pages.presentation.screens.draw.DrawingApp
@@ -93,6 +94,9 @@ fun AppNavHost(
     val preferencesManager = remember { PreferencesManager(context) }
     val isIntroScreen = preferencesManager.getBoolean(Constants.IS_INTRO_SHOWN)
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.story))
+    var drawPath by remember { mutableStateOf(List(0) { Pair(Path(), PathProperties()) }) }
+
+
     NavHost(
         modifier = Modifier,
         navController = navHostController,
@@ -102,7 +106,7 @@ fun AppNavHost(
             NotesApp(navHostController, viewModel, todoViewModel)
         }
         composable(NavigationItem.CreateNotes.route) {
-            AddNewPage(viewModel, navHostController)
+            AddNewPage(viewModel, navHostController, drawPath = drawPath)
         }
         composable(
             "note/{nodeId}",
@@ -111,7 +115,7 @@ fun AppNavHost(
             )
         ) { navBackStackEntry ->
             val nodeId = navBackStackEntry.arguments?.getLong("nodeId")
-            AddNewPage(viewModel, navHostController, nodeId)
+            AddNewPage(viewModel, navHostController, nodeId, drawPath)
         }
 
         composable(NavigationItem.SettingsPage.route) {
@@ -144,7 +148,12 @@ fun AppNavHost(
         }
 
         composable(NavigationItem.DrawPage.route) {
-            DrawingApp(PaddingValues(8.dp), navHostController)
+            DrawingApp(
+                PaddingValues(8.dp), navHostController,
+                pathClick = { path ->
+                    drawPath = path
+                }
+            )
         }
 
     }
