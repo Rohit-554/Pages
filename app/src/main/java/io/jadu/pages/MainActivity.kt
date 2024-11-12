@@ -1,8 +1,11 @@
 package io.jadu.pages
 
 import AddNewPage
+import OnLifecycleEvent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContent
@@ -26,10 +29,12 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.navigation.NavHostController
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -38,6 +43,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -62,6 +68,9 @@ import io.jadu.pages.presentation.screens.introScreens.IntroScreenTwo
 import io.jadu.pages.presentation.viewmodel.NotesViewModel
 import io.jadu.pages.presentation.viewmodel.TodoViewModel
 import io.jadu.pages.ui.theme.PagesTheme
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -88,6 +97,7 @@ fun AppNavHost(
     navHostController: NavHostController,
     startDestination: String = NavigationItem.IntroPagerScreen.route
 ) {
+    val coroutineScope = rememberCoroutineScope()
     val viewModel: NotesViewModel = hiltViewModel()
     val todoViewModel: TodoViewModel = hiltViewModel()
     val context = LocalContext.current
@@ -103,6 +113,11 @@ fun AppNavHost(
         startDestination = startDestination
     ) {
         composable(NavigationItem.Home.route) {
+            DisposableEffect(Unit) {
+                drawPath = emptyList()
+                viewModel.clearImageUriList()
+                onDispose {}
+            }
             NotesApp(navHostController, viewModel, todoViewModel)
         }
         composable(NavigationItem.CreateNotes.route) {
@@ -120,22 +135,21 @@ fun AppNavHost(
 
         composable(NavigationItem.SettingsPage.route) {
             SettingsPage(navHostController)
-            //ProfilePage(PaddingValues(8.dp), navHostController)
         }
 
         composable(NavigationItem.AboutPage.route) {
             AboutPage(navHostController)
         }
 
-       /* composable(NavigationItem.IntroScreenOne.route) {
-            IntroScreenOne(navHostController, pagerState)
-        }*/
+        /* composable(NavigationItem.IntroScreenOne.route) {
+             IntroScreenOne(navHostController, pagerState)
+         }*/
 
-        composable(NavigationItem.IntroScreenTwo.route){
+        composable(NavigationItem.IntroScreenTwo.route) {
             IntroScreenTwo(navHostController)
         }
 
-        composable(NavigationItem.IntroPagerScreen.route){
+        composable(NavigationItem.IntroPagerScreen.route) {
             IntroPager(navHostController)
         }
 
@@ -158,9 +172,9 @@ fun AppNavHost(
 
     }
 
-    if(!isIntroScreen){
+    if (!isIntroScreen) {
         navHostController.navigate(NavigationItem.IntroPagerScreen.route)
-    }else{
+    } else {
         navHostController.navigate(NavigationItem.Home.route) {
             popUpTo(NavigationItem.IntroPagerScreen.route) { inclusive = true }
         }
@@ -200,8 +214,10 @@ fun NotesApp(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
-            BottomNavigationBar(items, selectedItemIndex
-            , onItemSelected = {selectedItemIndex = it}
+            BottomNavigationBar(
+                items,
+                selectedItemIndex,
+                onItemSelected = { selectedItemIndex = it }
             )
         },
         contentWindowInsets = WindowInsets(
@@ -213,7 +229,11 @@ fun NotesApp(
             AnimatedContent(
                 targetState = selectedItemIndex,
                 transitionSpec = {
-                    fadeIn(animationSpec = tween(100)) togetherWith fadeOut(animationSpec = tween(300))
+                    fadeIn(animationSpec = tween(100)) togetherWith fadeOut(
+                        animationSpec = tween(
+                            300
+                        )
+                    )
                 }, label = ""
             ) { targetIndex ->
                 when (targetIndex) {

@@ -1,18 +1,19 @@
 package io.jadu.pages.presentation.viewmodel
 
-import android.provider.ContactsContract.CommonDataKinds.Note
+import android.net.Uri
 import android.util.Log
+import androidx.compose.ui.graphics.Path
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.jadu.pages.domain.model.Notes
+import io.jadu.pages.domain.model.PathProperties
 import io.jadu.pages.domain.usecase.AddNoteUseCase
 import io.jadu.pages.domain.usecase.DeleteNotesUseCase
 import io.jadu.pages.domain.usecase.GetNotesPaginatedUseCase
 import io.jadu.pages.domain.usecase.SearchNoteUseCase
 import io.jadu.pages.domain.usecase.UpdateNotesPositionUseCase
 import io.jadu.pages.domain.usecase.UpdateNotesUseCase
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -41,9 +42,41 @@ class NotesViewModel @Inject constructor(
     private val _updatedNotes = MutableStateFlow<List<Notes>>(emptyList())
     val updatedNotes: StateFlow<List<Notes>> get() = _updatedNotes
 
+    private val _imageUriList = MutableStateFlow<List<Uri?>>(emptyList())
+    val imageUriList: StateFlow<List<Uri?>> get() = _imageUriList
+
+    private val _drawingPathList = MutableStateFlow<List<List<Pair<Path, PathProperties>>>>(emptyList())
+    val drawingPathList: StateFlow<List<List<Pair<Path, PathProperties>>>> get() = _drawingPathList
+
+    fun addImageUris(imageUri: Uri) {
+        _imageUriList.value += imageUri
+    }
+
+    fun removeImageUri(imageUri: Uri) {
+        _imageUriList.value -= imageUri
+    }
+
+    fun clearImageUriList() {
+        _imageUriList.value = emptyList()
+    }
+
+    fun addDrawingPath(drawPath: List<Pair<Path, PathProperties>>) {
+        _drawingPathList.value += listOf(drawPath)
+    }
+
+    fun removeDrawingPath(drawPath: List<Pair<Path, PathProperties>>) {
+        _drawingPathList.value -= listOf(drawPath)
+    }
+
+
+    fun clearDrawingPathList() {
+        _drawingPathList.value = emptyList()
+    }
+
     fun addNotes(note: Notes) = viewModelScope.launch {
         addNotesUseCase.invoke(note)
     }
+
 
     fun updateNotes(
         title: String,

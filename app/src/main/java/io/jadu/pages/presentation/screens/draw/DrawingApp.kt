@@ -102,7 +102,6 @@ fun DrawingApp(paddingValues: PaddingValues, navHostController: NavHostControlle
                 .padding(padValue)
                 .background(backgroundColor)
         ) {
-
             val drawModifier = Modifier
                 .padding(8.dp)
                 .shadow(1.dp)
@@ -130,12 +129,12 @@ fun DrawingApp(paddingValues: PaddingValues, navHostController: NavHostControlle
                             }
                             currentPath.translate(change)
                         }
-                        pointerInputChange.consumePositionChange()
+                        if (pointerInputChange.positionChange() != Offset.Zero) pointerInputChange.consume()
 
                     },
                     onDragEnd = { pointerInputChange ->
                         motionEvent = MotionEvent.Up
-                        pointerInputChange.consumeDownChange()
+                        if (pointerInputChange.pressed != pointerInputChange.previousPressed) pointerInputChange.consume()
                     }
                 )
 
@@ -155,12 +154,11 @@ fun DrawingApp(paddingValues: PaddingValues, navHostController: NavHostControlle
                     MotionEvent.Move -> {
 
                         if (drawMode != DrawMode.Touch) {
-                            currentPath.quadraticBezierTo(
+                            currentPath.quadraticTo(
                                 previousPosition.x,
                                 previousPosition.y,
                                 (previousPosition.x + currentPosition.x) / 2,
                                 (previousPosition.y + currentPosition.y) / 2
-
                             )
                         }
 
