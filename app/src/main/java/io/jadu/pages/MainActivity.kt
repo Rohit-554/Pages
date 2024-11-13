@@ -1,7 +1,6 @@
 package io.jadu.pages
 
 import AddNewPage
-import OnLifecycleEvent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -30,6 +29,7 @@ import androidx.compose.material3.Scaffold
 import androidx.navigation.NavHostController
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -116,6 +116,7 @@ fun AppNavHost(
             DisposableEffect(Unit) {
                 drawPath = emptyList()
                 viewModel.clearImageUriList()
+                viewModel.clearDrawingPathList()
                 onDispose {}
             }
             NotesApp(navHostController, viewModel, todoViewModel)
@@ -165,7 +166,8 @@ fun AppNavHost(
             DrawingApp(
                 PaddingValues(8.dp), navHostController,
                 pathClick = { path ->
-                    drawPath = path
+                    //drawPath = path
+                    viewModel.addDrawingPath(path)
                 }
             )
         }

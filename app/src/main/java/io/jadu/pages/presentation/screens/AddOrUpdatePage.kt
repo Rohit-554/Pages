@@ -18,14 +18,17 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clipToBounds
@@ -71,9 +74,6 @@ import io.jadu.pages.ui.theme.LightGray
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-@OptIn(
-    ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class, ExperimentalFoundationApi::class
-)
 @Composable
 fun AddNewPage(
     viewModel: NotesViewModel,
@@ -97,19 +97,11 @@ fun AddNewPage(
     var areFieldEmpty by remember { mutableStateOf(false) }
     var showColorPickerDialog by remember { mutableStateOf(false) }
     var isPinned by remember { mutableStateOf(false) }
-    var drawPathLines by remember { mutableStateOf(drawPath) }
     val lifecycleOwner = LocalLifecycleOwner.current
     val selectedImageUriList = viewModel.imageUriList.collectAsState(initial = emptyList()).value
-    //var drawPathLines = viewModel.drawingPathList.collectAsState(initial = emptyList()).value
-
-    /*if(!drawPathLines.contains(drawPath)){
-       viewModel.addDrawingPath(drawPath)
-    }*/
+    val drawPathLines = viewModel.drawingPathList.collectAsState(initial = emptyList()).value
 
 
-    LaunchedEffect(selectedImageUriList) {
-        Log.d("AddNewPageselect", "Selected Image Uri List: $selectedImageUriList")
-    }
     LaunchedEffect(notesId, notes) {
         if (notesId != 0L) {
             val note = notes.find { it.id == notesId }
@@ -336,14 +328,18 @@ fun AddNewPage(
                     }
 
                     if (drawPathLines.isNotEmpty()) {
-                        Box(
-                            modifier = Modifier.background(Color.Gray).wrapContentHeight()
-                        ){
-                            DisplayPaths(drawPathLines, onClose = {
-                                drawPathLines = emptyList()
-                            })
+                        Log.d("DrawPathLines", "DrawPathLines: ${drawPathLines.size}")
+                        drawPathLines.forEach {
+                            Box(
+                                modifier = Modifier
+                                    .background(Color.White)
+                                    .wrapContentHeight()
+                            ) {
+                                DisplayPaths(it, onClose = {
+                                    viewModel.removeDrawingPath(it)
+                                })
+                            }
                         }
-
                     }
                 }
             }
@@ -361,34 +357,42 @@ fun AddNewPage(
 
 @Composable
 fun ImageItem(imageUri: Uri, onCancel: () -> Unit) {
-    Box {
-        Column {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Cancel Image",
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clickable { onCancel() }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight()
+    ) {
+        val screenHeight = LocalConfiguration.current.screenHeightDp
+        Image(
+            painter = rememberAsyncImagePainter(imageUri),
+            contentDescription = "Selected Image",
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = screenHeight.dp / 3),
+            contentScale = ContentScale.Crop
+        )
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(8.dp)
+                .background(
+                    color = Color.Black.copy(alpha = 0.7f),
+                    shape = CircleShape
                 )
-            }
-            val screenHeight = LocalConfiguration.current.screenHeightDp
-            Image(
-                painter = rememberAsyncImagePainter(imageUri),
-                contentDescription = "Selected Image",
+                .clickable { onCancel() }
+        ) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Cancel Image",
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight()
-                    .then(Modifier.heightIn(max = screenHeight.dp / 3)),
-                contentScale = ContentScale.Crop
+                    .size(24.dp)
+                    .padding(4.dp),
+                tint = Color.White
             )
         }
     }
 }
-
 
 
 
@@ -407,14 +411,14 @@ fun DisplayPaths(paths: List<Pair<Path, PathProperties>>, onClose: () -> Unit) {
             val pathBounds = pair.first.getBounds()
             Rect(
                 left = minOf(acc.left, pathBounds.left),
-                top = minOf(acc.top, pathBounds.top),
+                top = minOf(acc.top, pathBounds.top - 32),
                 right = maxOf(acc.right, pathBounds.right),
-                bottom = maxOf(acc.bottom, pathBounds.bottom)
+                bottom = maxOf(acc.bottom+ 32, pathBounds.bottom + 32)
             )
         }
     }
 
-    val pathOffset = Offset(pathBounds.left, pathBounds.top)
+    val pathOffset = Offset(pathBounds.left - 32, pathBounds.top)
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -426,20 +430,27 @@ fun DisplayPaths(paths: List<Pair<Path, PathProperties>>, onClose: () -> Unit) {
                 .padding(8.dp),
             horizontalArrangement = Arrangement.End
         ) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = "Close",
+            Box(
                 modifier = Modifier
-                    .size(24.dp)
-                    .clickable {
-                        onClose()
-                    }
-            )
+                    .background(
+                        color = Color.Black.copy(alpha = 0.7f),
+                        shape = CircleShape
+                    )
+                    .clickable { onClose() }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Close",
+                    modifier = Modifier
+                        .size(24.dp)
+                        .padding(4.dp),
+                    tint = Color.White
+                )
+            }
         }
 
         val canvasWidth = pathBounds.width
         val canvasHeight = pathBounds.height
-        val screenWidth = (LocalConfiguration.current.screenWidthDp) * LocalDensity.current.density
 
         Box(
             modifier = Modifier
@@ -450,11 +461,11 @@ fun DisplayPaths(paths: List<Pair<Path, PathProperties>>, onClose: () -> Unit) {
             Canvas(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(canvasHeight.dp)
+                    .height((canvasHeight / LocalDensity.current.density).dp)
             ) {
                 drawRect(
                     color = Color.White,
-                    size = Size(screenWidth.toFloat(), canvasHeight),
+                    size = Size(canvasWidth, canvasHeight),
                     topLeft = Offset.Zero
                 )
 
@@ -473,28 +484,6 @@ fun DisplayPaths(paths: List<Pair<Path, PathProperties>>, onClose: () -> Unit) {
         }
     }
 }
-
-
-
-
-@Composable
-fun OnLifecycleEvent(onEvent: (owner: LifecycleOwner, event: Lifecycle.Event) -> Unit) {
-    val eventHandler = rememberUpdatedState(onEvent)
-    val lifecycleOwner = rememberUpdatedState(LocalLifecycleOwner.current)
-
-    DisposableEffect(lifecycleOwner.value) {
-        val lifecycle = lifecycleOwner.value.lifecycle
-        val observer = LifecycleEventObserver { owner, event ->
-            eventHandler.value(owner, event)
-        }
-
-        lifecycle.addObserver(observer)
-        onDispose {
-            lifecycle.removeObserver(observer)
-        }
-    }
-}
-
 
 fun checkIfFieldEmpty(fieldKey: String): Boolean {
     return fieldKey.isEmpty()

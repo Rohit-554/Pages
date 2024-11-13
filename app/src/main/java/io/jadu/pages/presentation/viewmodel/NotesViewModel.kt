@@ -65,7 +65,7 @@ class NotesViewModel @Inject constructor(
     }
 
     fun removeDrawingPath(drawPath: List<Pair<Path, PathProperties>>) {
-        _drawingPathList.value -= listOf(drawPath)
+            _drawingPathList.value -= listOf(drawPath)
     }
 
 
