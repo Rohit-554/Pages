@@ -100,7 +100,19 @@ fun AddNewPage(
     val lifecycleOwner = LocalLifecycleOwner.current
     val selectedImageUriList = viewModel.imageUriList.collectAsState(initial = emptyList()).value
     val drawPathLines = viewModel.drawingPathList.collectAsState(initial = emptyList()).value
+    val canvasItems: List<CanvasItem> = viewModel.canvasItems.collectAsState(initial = emptyList()).value
 
+    /*val combinedList = remember {
+        mutableListOf<CanvasItem>()
+    }.apply {
+        clear()
+        selectedImageUriList.filterNotNull().forEach { uri ->
+            add(CanvasItem.ImageItem(uri))
+        }
+        drawPathLines.forEach { drawing ->
+            add(CanvasItem.DrawingItem(drawing))
+        }
+    }*/
 
     LaunchedEffect(notesId, notes) {
         if (notesId != 0L) {
@@ -126,6 +138,9 @@ fun AddNewPage(
                 )
                 if (!selectedImageUriList.contains(uri)) {
                     viewModel.addImageUris(uri)
+                }
+                if(!canvasItems.contains(CanvasItem.ImageItem(uri))){
+                    viewModel.addImageUri(uri)
                 }
             }
         }
@@ -317,28 +332,28 @@ fun AddNewPage(
                         })
 
 
-                    if (selectedImageUriList.isNotEmpty()) {
-                        selectedImageUriList.forEach { imageUri ->
-                            if (imageUri != null) {
-                                ImageItem(imageUri = imageUri) {
-                                    viewModel.removeImageUri(imageUri)
+                    canvasItems.forEach { item ->
+                        when (item) {
+                            is CanvasItem.ImageItem -> {
+                                // Render image
+                                ImageItem(imageUri = item.uri) {
+                                    viewModel.removeImageUriCanvas(item.uri)
                                 }
                             }
-                        }
-                    }
-
-                    if (drawPathLines.isNotEmpty()) {
-                        Log.d("DrawPathLines", "DrawPathLines: ${drawPathLines.size}")
-                        drawPathLines.forEach {
-                            Box(
-                                modifier = Modifier
-                                    .background(Color.White)
-                                    .wrapContentHeight()
-                            ) {
-                                DisplayPaths(it, onClose = {
-                                    viewModel.removeDrawingPath(it)
-                                })
+                            is CanvasItem.DrawingItem -> {
+                                // Render drawing
+                                Box(
+                                    modifier = Modifier
+                                        .background(Color.White)
+                                        .wrapContentHeight()
+                                ) {
+                                    DisplayPaths(item.pathData, onClose = {
+                                        viewModel.removeDrawingPathCanvas(item.pathData)
+                                    })
+                                }
                             }
+
+                            else -> {}
                         }
                     }
                 }
@@ -489,6 +504,7 @@ fun checkIfFieldEmpty(fieldKey: String): Boolean {
     return fieldKey.isEmpty()
 }
 
-
-
-
+sealed class CanvasItem {
+    data class ImageItem(val uri: Uri) : CanvasItem()
+    data class DrawingItem(val pathData: List<Pair<Path, PathProperties>>) : CanvasItem()
+}

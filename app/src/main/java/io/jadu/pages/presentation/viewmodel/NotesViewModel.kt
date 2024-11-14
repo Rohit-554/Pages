@@ -1,5 +1,6 @@
 package io.jadu.pages.presentation.viewmodel
 
+import CanvasItem
 import android.net.Uri
 import android.util.Log
 import androidx.compose.ui.graphics.Path
@@ -128,6 +129,35 @@ class NotesViewModel @Inject constructor(
                 _notes.value =
                     currentNotes.filter { it.id in newNoteIds || currentNotes.indexOf(it) < currentNotes.size }
             }
+        }
+    }
+
+    private val _canvasItems = MutableStateFlow<List<CanvasItem>>(emptyList())
+    val canvasItems: StateFlow<List<CanvasItem>> = _canvasItems
+
+    // Function to add image
+    fun addImageUri(imageUri: Uri) {
+        Log.d("ImageUri", "ImageUri: ${_canvasItems.value.size}")
+        _canvasItems.value += CanvasItem.ImageItem(imageUri)
+    }
+
+    // Function to add drawing path
+    fun addDrawingPathCanvas(drawing: List<Pair<Path, PathProperties>>) {
+        _canvasItems.value += CanvasItem.DrawingItem(drawing)
+    }
+
+    // Function to remove an image
+    fun removeImageUriCanvas(imageUri: Uri) {
+        _canvasItems.value -= CanvasItem.ImageItem(imageUri)
+       /* _canvasItems.value = _canvasItems.value.filterNot {
+            it is CanvasItem.ImageItem && it.uri == imageUri
+        }*/
+    }
+
+    // Function to remove drawing path
+    fun removeDrawingPathCanvas(drawing: List<Pair<Path, PathProperties>>) {
+        _canvasItems.value = _canvasItems.value.filterNot {
+            it is CanvasItem.DrawingItem && it.pathData == drawing
         }
     }
 

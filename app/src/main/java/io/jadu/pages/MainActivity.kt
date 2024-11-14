@@ -168,6 +168,7 @@ fun AppNavHost(
                 pathClick = { path ->
                     //drawPath = path
                     viewModel.addDrawingPath(path)
+                    viewModel.addDrawingPathCanvas(path)
                 }
             )
         }
