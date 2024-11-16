@@ -1,5 +1,6 @@
 package io.jadu.pages.presentation.components
 
+import DisplayPaths
 import android.util.Log
 import android.widget.Space
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -134,11 +135,11 @@ fun NoteCard(
                         .build(),
                 )
                 Log.d("NoteCard", "ImageUri: ${note.imageUri}")
-                if (note.imageUri != null && note.imageUri != "null") {
-                    key(note.imageUri) {
+                if (!note.imageUri.isNullOrEmpty() && note.imageUri!!.isNotEmpty()) {
+                    key(note.imageUri!!.first()) {
                         Image(
                             painter = rememberAsyncImagePainter(
-                                model = stringToUri(note.imageUri ?: "")
+                                model = note.imageUri!!.first()
                             ),
                             contentDescription = "Note Image",
                             modifier = Modifier

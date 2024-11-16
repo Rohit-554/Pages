@@ -35,12 +35,14 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PushPin
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.PushPin
+import androidx.compose.material.icons.outlined.Remove
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -135,8 +137,6 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController, on
         selectedNotes.clear() // Clear the selection after deletion
     }
 
-    Log.d("HomePage", "Notes: ${updatedNotes.size}")
-
     Scaffold(
         topBar = {
             if(selectedNotes.isNotEmpty()){
@@ -195,7 +195,7 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController, on
                     CustomFab(
                         onClick = {
                             selectedNotes.forEach { note ->
-                                viewModel.updateNotes(note.title, note.description, note.imageUri, note.id, note.color, !allSelectedPinned)
+                                viewModel.updateNotes(note.title, note.description, note.imageUri, note.drawingPaths,note.id, note.color, !allSelectedPinned)
                             }
                             selectedNotes.clear()
                             multipleSelectedForDelete = false
