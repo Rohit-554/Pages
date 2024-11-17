@@ -55,6 +55,7 @@ import coil.compose.rememberAsyncImagePainter
 import io.jadu.pages.domain.model.Notes
 import io.jadu.pages.domain.model.PathProperties
 import io.jadu.pages.presentation.components.ColorPickerDialog
+import io.jadu.pages.presentation.components.CustomDialog
 import io.jadu.pages.presentation.components.CustomInputFields
 import io.jadu.pages.presentation.components.CustomSnackBar
 import io.jadu.pages.presentation.components.CustomTopAppBar
@@ -97,6 +98,7 @@ fun AddNewPage(
     val scrollState = rememberScrollState()
     val isKeyboardOpen by keyboardAsState()
     var shouldScrollToBottom by remember { mutableStateOf(true) }
+    var isNoteDeleteClicked by remember { mutableStateOf(false) }
 
     val imeHeight =
         if (isKeyboardOpen) WindowInsets.Companion.ime.getBottom(LocalDensity.current) else 0
@@ -233,30 +235,28 @@ fun AddNewPage(
                     }
                 },
                 onDeleteClick = {
-                    if (notesId != null) {
-                        viewModel.deleteNotes(notesId)
-                    }
-                    Toast.makeText(context, "Deleted Successfully", Toast.LENGTH_SHORT).show()
-                    coroutineScope.launch {
-                        withContext(Dispatchers.Main) {
-                            navHostController.popBackStack()
-                        }
-                    }
+                    isNoteDeleteClicked = true
                 },
                 onPinClick = {
+                    isPinned = !isPinned
                     if (notesId != null) {
-                        viewModel.updateNotes(
+                        updateNote(
+                            viewModel = viewModel,
                             title = title.text.trim(),
                             description = description.text.trim(),
                             imageUri = selectedImageUriList,
                             notesId = notesId,
-                            drawingPaths = null,
                             color = if (selectedColor != defaultColor) selectedColor.toString() else null,
-                            isPinned = isPinned
+                            isPinned = true
                         )
                     }
-                    Toast.makeText(context, "Pinned Successfully", Toast.LENGTH_SHORT).show()
-                }
+                    Toast.makeText(
+                        context,
+                        if (isPinned) "Pinned Successfully" else "Unpinned Successfully",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                },
+                isPinned = isPinned
             )
         },
         floatingActionButton = {
@@ -380,7 +380,33 @@ fun AddNewPage(
                 }
             }
 
-
+            if (isNoteDeleteClicked) {
+                if (notesId != 0L) {
+                    CustomDialog(
+                        title = "Delete Note",
+                        description = "Are you sure you want to delete this note?",
+                        onConfirm = {
+                            isNoteDeleteClicked = false
+                            if (notesId != null) {
+                                viewModel.deleteNotes(notesId)
+                                Toast.makeText(context, "Deleted Successfully", Toast.LENGTH_SHORT)
+                                    .show()
+                                coroutineScope.launch {
+                                    withContext(Dispatchers.Main) {
+                                        navHostController.popBackStack()
+                                    }
+                                }
+                            }
+                        },
+                        onCancel = {
+                            isNoteDeleteClicked = false
+                        }
+                    )
+                } else {
+                    isNoteDeleteClicked = false
+                    Toast.makeText(context, "Note is not added yet", Toast.LENGTH_SHORT).show()
+                }
+            }
         },
 
         snackbarHost = {
@@ -392,6 +418,25 @@ fun AddNewPage(
         })
 }
 
+fun updateNote(
+    viewModel: NotesViewModel,
+    title: String,
+    description: String,
+    imageUri: List<Uri>,
+    notesId: Long,
+    color: String?,
+    isPinned: Boolean
+) {
+    viewModel.updateNotes(
+        title = title,
+        description = description,
+        imageUri = imageUri,
+        notesId = notesId,
+        drawingPaths = null,
+        color = color,
+        isPinned = isPinned
+    )
+}
 
 @Composable
 fun GraphicsItem(

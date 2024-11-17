@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -71,13 +72,6 @@ fun EditPageBottomAppBar(
     scrollState: ScrollState = remember { ScrollState(0) }
 ) {
     var isExpanded by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
-    /*LaunchedEffect(Unit) {
-        delay(250)
-        scope.launch {
-            scrollState.animateScrollTo(scrollState.maxValue)
-        }
-    }*/
     Box(
         contentAlignment = Alignment.CenterEnd,
         modifier = Modifier
@@ -88,7 +82,6 @@ fun EditPageBottomAppBar(
                 )
             .fillMaxWidth()
     ) {
-
         Spacer(modifier = Modifier.height(16.dp))
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -150,7 +143,7 @@ fun EditPageBottomAppBar(
                     elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
                 ) {
                     Icon(
-                        if (isExpanded) Icons.Filled.Close else Icons.Filled.Image,
+                        if (isExpanded) Icons.Filled.Close else Icons.Filled.AddAPhoto,
                         contentDescription = if (isExpanded) "Close menu" else "Open menu"
                     )
                 }

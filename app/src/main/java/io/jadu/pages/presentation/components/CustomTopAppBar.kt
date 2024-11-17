@@ -10,6 +10,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Pin
+import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.outlined.Share
@@ -44,9 +46,10 @@ fun CustomTopAppBar(
     onSaveClick: () -> Unit = {},
     onDeleteClick: () -> Unit = {},
     onPinClick : () -> Unit = {},
+    isPinned: Boolean = false
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
-
+    var isPinnedClicked by remember { mutableStateOf(isPinned) }
     TopAppBar(
         title = {
             Text(
@@ -67,6 +70,18 @@ fun CustomTopAppBar(
         },
         actions = {
             if (isDrawMenu) {
+                IconButton(
+                    onClick = {
+                        onPinClick()
+                    }
+                ) {
+                    Icon(
+                        imageVector = if (isPinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
+                        contentDescription = "Pin",
+                        modifier = Modifier.size(24.dp),
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
 
                 IconButton(
                     onClick = { onSaveClick() }
@@ -79,7 +94,6 @@ fun CustomTopAppBar(
                     )
                 }
 
-
                 IconButton(onClick = { isMenuExpanded = true }) {
                     Icon(
                         imageVector = Icons.Filled.MoreVert,
@@ -89,22 +103,7 @@ fun CustomTopAppBar(
                 DropdownMenu(
                     expanded = isMenuExpanded,
                     onDismissRequest = { isMenuExpanded = false },
-                    offset = DpOffset(x = (-16).dp, y = 0.dp)
                 ) {
-                    DropdownMenuItem(
-                        text = {
-                            CustomMenuItem(
-                                title = "Pin",
-                                icons = Icons.Outlined.PushPin,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        },
-                        onClick = {
-                            isMenuExpanded = false
-                            onPinClick()
-                        }
-                    )
-
                     DropdownMenuItem(
                         text = {
                             CustomMenuItem(
@@ -131,8 +130,6 @@ fun CustomTopAppBar(
 
                         }
                     )
-
-
                 }
             }
         }

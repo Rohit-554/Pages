@@ -81,6 +81,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import io.jadu.pages.domain.model.Notes
+import io.jadu.pages.presentation.components.CustomDialog
 import io.jadu.pages.presentation.components.CustomFab
 import io.jadu.pages.presentation.components.HomeTopAppBar
 import io.jadu.pages.presentation.components.NoteCard
@@ -94,7 +95,11 @@ import kotlin.math.sqrt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController, onCardSelected: (Boolean) -> Unit) {
+fun HomePage(
+    viewModel: NotesViewModel,
+    navHostController: NavHostController,
+    onCardSelected: (Boolean) -> Unit
+) {
     val context = LocalContext.current
     val notes = viewModel.notes.collectAsState(initial = emptyList()).value
     val lazyStaggeredGridState = rememberLazyStaggeredGridState()
@@ -109,7 +114,7 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController, on
     val onBackPressedDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     var backPressHandled by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
-
+    val isDeletePressed = remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = notes) {
         viewModel.getNotesPaginated(limit, offset)
@@ -139,7 +144,7 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController, on
 
     Scaffold(
         topBar = {
-            if(selectedNotes.isNotEmpty()){
+            if (selectedNotes.isNotEmpty()) {
                 TopAppBar(
                     title = {
                         Text(
@@ -150,7 +155,12 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController, on
                     },
                     actions = {
                         Box(
-                            modifier = Modifier.padding(8.dp).background(MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .background(
+                                    MaterialTheme.colorScheme.outlineVariant,
+                                    RoundedCornerShape(12.dp)
+                                )
                                 .clickable {
                                     selectedNotes.clear()
                                     selectedNotes.addAll(notes)
@@ -167,7 +177,7 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController, on
                         }
                     }
                 )
-            }else{
+            } else {
                 HomeTopAppBar(
                     onSearchClick = {},
                     onMenuClick = {
@@ -188,37 +198,65 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController, on
             bottom = 0.dp
         ),
         floatingActionButton = {
-            Row  {
+            Row {
                 if (selectedNotes.isNotEmpty()) {
                     multipleSelectedForDelete = true
                     val allSelectedPinned = selectedNotes.all { it.isPinned }
                     CustomFab(
                         onClick = {
                             selectedNotes.forEach { note ->
-                                viewModel.updateNotes(note.title, note.description, note.imageUri, note.drawingPaths,note.id, note.color, !allSelectedPinned)
+                                viewModel.updateNotes(
+                                    note.title,
+                                    note.description,
+                                    note.imageUri,
+                                    note.drawingPaths,
+                                    note.id,
+                                    note.color,
+                                    !allSelectedPinned
+                                )
                             }
                             selectedNotes.clear()
                             multipleSelectedForDelete = false
-                            Toast.makeText(context, if(allSelectedPinned) "Unpinned Successfully" else "Pinned Sucessfully", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                context,
+                                if (allSelectedPinned) "Unpinned Successfully" else "Pinned Sucessfully",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         },
-                        icon = if (allSelectedPinned) Icons.Filled.PushPin  else Icons.Outlined.PushPin,
+                        icon = if (allSelectedPinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
                         contentDescription = "Pinned notes",
                         backgroundColor = MaterialTheme.colorScheme.onSurface,
                         tintColor = Color.Black
                     )
                     CustomFab(
-                        onClick = { deleteSelectedNotes() },
+                        onClick = {
+                            isDeletePressed.value = true
+                        },
                         icon = Icons.Outlined.Delete,
                         contentDescription = "Delete Note",
                         backgroundColor = MaterialTheme.colorScheme.onSurface,
                         tintColor = MaterialTheme.colorScheme.errorContainer
                     )
-                }else{
+                } else {
                     CustomFab(
                         onClick = { navHostController.navigate(NavigationItem.CreateNotes.route) },
                         icon = Icons.Default.Add,
                         contentDescription = "Add Note",
                         backgroundColor = ButtonBlue
+                    )
+                }
+
+                if(isDeletePressed.value){
+                    CustomDialog(
+                        title = "Delete Notes",
+                        description = "Are you sure you want to delete the selected notes?",
+                        onCancel = { isDeletePressed.value = false },
+                        onConfirm = {
+                            isDeletePressed.value = false
+                            multipleSelectedForDelete = false
+                            deleteSelectedNotes()
+                            Toast.makeText(context, "Deleted Successfully", Toast.LENGTH_SHORT).show()
+                        }
                     )
                 }
             }
@@ -251,12 +289,22 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController, on
                 ) {
                     if (pinnedNotes.isNotEmpty()) {
                         itemsIndexed(pinnedNotes) { index, note ->
-                                ShowNotes(note, navHostController, selectedNotes, multipleSelectedForDelete)
+                            ShowNotes(
+                                note,
+                                navHostController,
+                                selectedNotes,
+                                multipleSelectedForDelete
+                            )
                         }
                     }
                     if (unpinnedNotes.isNotEmpty()) {
                         itemsIndexed(unpinnedNotes) { index, note ->
-                                ShowNotes(note, navHostController, selectedNotes, multipleSelectedForDelete)
+                            ShowNotes(
+                                note,
+                                navHostController,
+                                selectedNotes,
+                                multipleSelectedForDelete
+                            )
                         }
                     }
 
@@ -313,11 +361,11 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController, on
         }
     }
 
-    BackHandler(enabled =  !backPressHandled  || multipleSelectedForDelete) {
-        if(multipleSelectedForDelete){
+    BackHandler(enabled = !backPressHandled || multipleSelectedForDelete) {
+        if (multipleSelectedForDelete) {
             multipleSelectedForDelete = false
             selectedNotes.clear()
-        }else{
+        } else {
             backPressHandled = true
             coroutineScope.launch {
                 awaitFrame()
@@ -329,7 +377,12 @@ fun HomePage(viewModel: NotesViewModel, navHostController: NavHostController, on
 }
 
 @Composable
-fun ShowNotes(note: Notes, navHostController: NavHostController, selectedNotes: MutableList<Notes>, multipleSelectedForDelete: Boolean) {
+fun ShowNotes(
+    note: Notes,
+    navHostController: NavHostController,
+    selectedNotes: MutableList<Notes>,
+    multipleSelectedForDelete: Boolean
+) {
     NoteCard(
         note = note,
         navHostController = navHostController,

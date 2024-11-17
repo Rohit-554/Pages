@@ -5,6 +5,7 @@ import android.util.Log
 import android.widget.Space
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
@@ -103,12 +104,13 @@ fun NoteCard(
                         ),
                         fontWeight = FontWeight.Black,
                         overflow = TextOverflow.Ellipsis,
-                        maxLines = 1
+                        maxLines = 1,
+                        modifier = Modifier.fillMaxWidth(0.8f)
                     )
                     if(note.isPinned){
                         Spacer(modifier = Modifier.weight(1f))
                         Icon(
-                            imageVector = Icons.Outlined.PushPin,
+                            imageVector = Icons.Filled.PushPin,
                             contentDescription = "Pinned",
                             modifier = Modifier.padding(start = 4.dp).size(16.dp),
                             tint = MaterialTheme.colorScheme.onSurface
@@ -129,25 +131,38 @@ fun NoteCard(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
 
-                val painter = rememberAsyncImagePainter(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(note.imageUri)
-                        .build(),
-                )
-                Log.d("NoteCard", "ImageUri: ${note.imageUri}")
                 if (!note.imageUri.isNullOrEmpty() && note.imageUri!!.isNotEmpty()) {
                     key(note.imageUri!!.first()) {
-                        Image(
-                            painter = rememberAsyncImagePainter(
-                                model = note.imageUri!!.first()
-                            ),
-                            contentDescription = "Note Image",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(100.dp)
-                                .clip(RoundedCornerShape(8.dp)),
-                            contentScale = ContentScale.Crop
-                        )
+                        note.imageUri!!.first().let { uri ->
+                            if(uri.toString().contains("drawing")){
+                                Box(
+                                    modifier = Modifier.fillMaxWidth().background(Color.White, RoundedCornerShape(8.dp))
+                                ){
+                                    Image(
+                                        painter = rememberAsyncImagePainter(
+                                            model = uri
+                                        ),
+                                        contentDescription = "Note Image",
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(100.dp)
+                                            .clip(RoundedCornerShape(8.dp)),
+                                    )
+                                }
+                            }else{
+                                Image(
+                                    painter = rememberAsyncImagePainter(
+                                        model = uri
+                                    ) ,
+                                    contentDescription = "Note Image",
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(100.dp)
+                                        .clip(RoundedCornerShape(8.dp)),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
+                        }
                     }
                 }
             }
