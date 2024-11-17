@@ -3,7 +3,7 @@ import android.Manifest.permission.READ_MEDIA_IMAGES
 import android.Manifest.permission.READ_MEDIA_VIDEO
 import android.Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED
 import android.content.Intent
-import android.content.res.Resources
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import android.util.Log
@@ -11,17 +11,17 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
@@ -30,7 +30,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -43,47 +42,45 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.findRootCoordinates
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import io.jadu.pages.domain.model.Notes
 import io.jadu.pages.domain.model.PathProperties
 import io.jadu.pages.presentation.components.ColorPickerDialog
+import io.jadu.pages.presentation.components.CustomDialog
 import io.jadu.pages.presentation.components.CustomInputFields
 import io.jadu.pages.presentation.components.CustomSnackBar
 import io.jadu.pages.presentation.components.CustomTopAppBar
 import io.jadu.pages.presentation.components.EditPageBottomAppBar
 import io.jadu.pages.presentation.components.SaveFab
-import io.jadu.pages.presentation.components.imeListener
 import io.jadu.pages.presentation.navigation.NavigationItem
 import io.jadu.pages.presentation.screens.parseColor
 import io.jadu.pages.presentation.viewmodel.NotesViewModel
 import io.jadu.pages.ui.theme.Black
 import io.jadu.pages.ui.theme.LightGray
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AddNewPage(
     viewModel: NotesViewModel,
     navHostController: NavHostController,
     notesId: Long? = 0L,
-    drawPath: List<Pair<Path, PathProperties>>
+    drawPath: List<Pair<Path, PathProperties>>,
+    bitmap: Bitmap?
 ) {
-    val imeState = imeListener()
-    val scrollState = rememberScrollState()
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackBarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     val notes = viewModel.notes.collectAsState(initial = emptyList()).value
@@ -93,26 +90,19 @@ fun AddNewPage(
     var title by remember { mutableStateOf(TextFieldValue("")) }
     var description by remember { mutableStateOf(TextFieldValue("")) }
     var selectedColor by remember { mutableStateOf(defaultColor) }
-    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var areFieldEmpty by remember { mutableStateOf(false) }
     var showColorPickerDialog by remember { mutableStateOf(false) }
     var isPinned by remember { mutableStateOf(false) }
-    val lifecycleOwner = LocalLifecycleOwner.current
     val selectedImageUriList = viewModel.imageUriList.collectAsState(initial = emptyList()).value
-    val drawPathLines = viewModel.drawingPathList.collectAsState(initial = emptyList()).value
-    val canvasItems: List<CanvasItem> = viewModel.canvasItems.collectAsState(initial = emptyList()).value
+    val notsState = viewModel.notesState.collectAsState().value
+    val scrollState = rememberScrollState()
+    val isKeyboardOpen by keyboardAsState()
+    var shouldScrollToBottom by remember { mutableStateOf(true) }
+    var isNoteDeleteClicked by remember { mutableStateOf(false) }
 
-    /*val combinedList = remember {
-        mutableListOf<CanvasItem>()
-    }.apply {
-        clear()
-        selectedImageUriList.filterNotNull().forEach { uri ->
-            add(CanvasItem.ImageItem(uri))
-        }
-        drawPathLines.forEach { drawing ->
-            add(CanvasItem.DrawingItem(drawing))
-        }
-    }*/
+    val imeHeight =
+        if (isKeyboardOpen) WindowInsets.Companion.ime.getBottom(LocalDensity.current) else 0
+
 
     LaunchedEffect(notesId, notes) {
         if (notesId != 0L) {
@@ -121,8 +111,29 @@ fun AddNewPage(
                 title = TextFieldValue(note.title)
                 description = TextFieldValue(note.description ?: "")
                 selectedColor = note.color?.let { parseColor(it) } ?: defaultColor
-                selectedImageUri = note.imageUri?.let { Uri.parse(it) }
+                note.imageUri?.forEach { uri ->
+                    if (uri !in viewModel.imageUriList.value) {
+                        viewModel.addImageUris(uri)
+                    }
+                }
                 isPinned = note.isPinned
+            }
+        }
+        if (notsState.title.isNotEmpty() || notsState.description != "" || notsState.color != Color.Black || notsState.isPinned) {
+            title = TextFieldValue(notsState.title)
+            description = TextFieldValue(notsState.description ?: "")
+            selectedColor = notsState.color ?: defaultColor
+            isPinned = notsState.isPinned
+            shouldScrollToBottom = notsState.shouldScroll
+        }
+    }
+
+    LaunchedEffect(shouldScrollToBottom) {
+        if (shouldScrollToBottom) {
+            coroutineScope.launch {
+                delay(250)
+                shouldScrollToBottom = false
+                scrollState.animateScrollTo(scrollState.maxValue)
             }
         }
     }
@@ -138,9 +149,11 @@ fun AddNewPage(
                 )
                 if (!selectedImageUriList.contains(uri)) {
                     viewModel.addImageUris(uri)
-                }
-                if(!canvasItems.contains(CanvasItem.ImageItem(uri))){
-                    viewModel.addImageUri(uri)
+                    coroutineScope.launch {
+                        scrollState.animateScrollTo(0)
+                    }
+                } else {
+                    Toast.makeText(context, "Image already added", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -173,107 +186,116 @@ fun AddNewPage(
 
 
 
-    LaunchedEffect(
-        key1 = imeState.value
-    ) {
-        if (imeState.value) {
-            scrollState.scrollTo(scrollState.maxValue)
-        }
-    }
     Scaffold(containerColor = if (selectedColor != Black) selectedColor else MaterialTheme.colorScheme.background,
         topBar = {
             CustomTopAppBar(
-                title = toolBarText, navHostController = navHostController
-            )
-        },
-        floatingActionButton = {
-            Column {
-                if (notesId != 0L && notesId != null) {
-                    SaveFab(icon = Icons.Default.Delete,
-                        containerColor = Color(0xffff474c),
-                        tintColor = Color.White,
-                        onClick = {
-                            viewModel.deleteNotes(notesId)
-                            coroutineScope.launch {
-                                snackbarHostState.showSnackbar(
-                                    "Deleted Successfully", duration = SnackbarDuration.Short
-                                )
-                            }
-                            coroutineScope.launch {
-                                delay(250)
-                                navHostController.popBackStack()
-                            }
-                        })
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                EditPageBottomAppBar(onImagePickClick = {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                        requestPermissions.launch(
-                            arrayOf(
-                                READ_MEDIA_IMAGES,
-                                READ_MEDIA_VIDEO,
-                                READ_MEDIA_VISUAL_USER_SELECTED
-                            )
-                        )
-                    } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        requestPermissions.launch(arrayOf(READ_MEDIA_IMAGES, READ_MEDIA_VIDEO))
-                    } else {
-                        requestPermissions.launch(arrayOf(READ_EXTERNAL_STORAGE))
-                    }
-                }, onColorPickClick = {
-                    showColorPickerDialog = true
-                }, onDrawClick = {
-                    navHostController.navigate(NavigationItem.DrawPage.route)
-                })
-                Spacer(modifier = Modifier.height(8.dp))
-                SaveFab(onClick = {
+                title = toolBarText, navHostController = navHostController, isDrawMenu = true,
+                onSaveClick = {
                     if (checkIfFieldEmpty(title.text)) {
                         coroutineScope.launch {
-                            snackbarHostState.showSnackbar(
-                                "Title cannot be empty", duration = SnackbarDuration.Short
-                            )
+                            Toast.makeText(context, "Title cannot be empty", Toast.LENGTH_SHORT)
+                                .show()
                         }
                         areFieldEmpty = true
-                        return@SaveFab
+                        return@CustomTopAppBar
                     }
                     val newNote = Notes(
                         id = System.currentTimeMillis(),
                         title = title.text.trim(),
                         description = description.text.trim(),
                         color = if (selectedColor != defaultColor) selectedColor.toString() else null,
-                        imageUri = selectedImageUri.toString()
+                        imageUri = selectedImageUriList,
+                        drawingPaths = null,
+                        isPinned = isPinned
                     )
                     if (notesId != 0L && notesId != null) {
                         viewModel.updateNotes(
                             title = title.text.trim(),
                             description = description.text.trim(),
-                            imageUri = selectedImageUri.toString(),
+                            imageUri = selectedImageUriList,
                             notesId = notesId,
+                            drawingPaths = null,
                             color = if (selectedColor != defaultColor) selectedColor.toString() else null,
                             isPinned = isPinned
                         )
+                        Toast.makeText(context, "Updated Successfully", Toast.LENGTH_SHORT).show()
                         coroutineScope.launch {
-                            snackbarHostState.showSnackbar(
-                                "Updated Successfully", duration = SnackbarDuration.Short
-                            )
-                        }
-                        coroutineScope.launch {
-                            delay(250)
-                            navHostController.popBackStack()
+                            withContext(Dispatchers.Main) {
+                                navHostController.popBackStack()
+                            }
                         }
                     } else {
                         viewModel.addNotes(newNote)
+                        Toast.makeText(context, "Saved Successfully", Toast.LENGTH_SHORT).show()
                         coroutineScope.launch {
-                            snackbarHostState.showSnackbar(
-                                "Saved Successfully", duration = SnackbarDuration.Short
-                            )
-                        }
-                        coroutineScope.launch {
-                            delay(250)
-                            navHostController.popBackStack()
+                            withContext(Dispatchers.Main) {
+                                navHostController.popBackStack()
+                            }
                         }
                     }
-                })
+                },
+                onDeleteClick = {
+                    isNoteDeleteClicked = true
+                },
+                onPinClick = {
+                    isPinned = !isPinned
+                    if (notesId != null) {
+                        updateNote(
+                            viewModel = viewModel,
+                            title = title.text.trim(),
+                            description = description.text.trim(),
+                            imageUri = selectedImageUriList,
+                            notesId = notesId,
+                            color = if (selectedColor != defaultColor) selectedColor.toString() else null,
+                            isPinned = true
+                        )
+                    }
+                    Toast.makeText(
+                        context,
+                        if (isPinned) "Pinned Successfully" else "Unpinned Successfully",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                },
+                isPinned = isPinned
+            )
+        },
+        floatingActionButton = {
+            Column(
+                Modifier.padding(16.dp)
+            ) {
+                EditPageBottomAppBar(
+                    onImagePickClick = {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                            requestPermissions.launch(
+                                arrayOf(
+                                    READ_MEDIA_IMAGES,
+                                    READ_MEDIA_VIDEO,
+                                    READ_MEDIA_VISUAL_USER_SELECTED
+                                )
+                            )
+                        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            requestPermissions.launch(arrayOf(READ_MEDIA_IMAGES, READ_MEDIA_VIDEO))
+                        } else {
+                            requestPermissions.launch(arrayOf(READ_EXTERNAL_STORAGE))
+                        }
+                    },
+                    onColorPickClick = {
+                        showColorPickerDialog = true
+                    },
+                    onDrawClick = {
+                        viewModel.addNotesState(
+                            notsState.copy(
+                                title = title.text,
+                                description = description.text,
+                                color = selectedColor,
+                                isPinned = isPinned,
+                                shouldScroll = shouldScrollToBottom
+                            )
+                        )
+                        navHostController.navigate(NavigationItem.DrawPage.route)
+                    },
+                    scrollState = scrollState
+                )
             }
         },
         content = { padding ->
@@ -282,17 +304,18 @@ fun AddNewPage(
                     .padding(padding)
                     .fillMaxSize()
                     .imePadding()
-
             ) {
                 Column(
                     modifier = Modifier
                         .padding(16.dp)
                         .fillMaxHeight()
                         .fillMaxWidth()
-                        .verticalScroll(rememberScrollState(), reverseScrolling = true)
-                        .imePadding(),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                        .verticalScroll(scrollState, reverseScrolling = true),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
+                    LaunchedEffect(Unit) {
+                        scrollState.scrollTo(scrollState.maxValue)
+                    }
                     CustomInputFields(
                         text = title.text,
                         onTitleChange = { title = TextFieldValue(it) },
@@ -331,60 +354,111 @@ fun AddNewPage(
                             selectedColor = defaultColor
                         })
 
-
-                    canvasItems.forEach { item ->
-                        when (item) {
-                            is CanvasItem.ImageItem -> {
-                                // Render image
-                                ImageItem(imageUri = item.uri) {
-                                    viewModel.removeImageUriCanvas(item.uri)
-                                }
-                            }
-                            is CanvasItem.DrawingItem -> {
-                                // Render drawing
-                                Box(
+                    if (selectedImageUriList.isNotEmpty()) {
+                        selectedImageUriList.forEach { uri ->
+                            if (uri.toString().contains("drawing")) {
+                                GraphicsItem(
+                                    imageUri = uri,
+                                    onCancel = {
+                                        viewModel.removeImageUri(uri)
+                                    },
+                                    isDrawing = true,
                                     modifier = Modifier
-                                        .background(Color.White)
-                                        .wrapContentHeight()
-                                ) {
-                                    DisplayPaths(item.pathData, onClose = {
-                                        viewModel.removeDrawingPathCanvas(item.pathData)
-                                    })
-                                }
-                            }
+                                )
 
-                            else -> {}
+                            } else {
+                                GraphicsItem(
+                                    imageUri = uri,
+                                    onCancel = {
+                                        viewModel.removeImageUri(uri)
+                                    },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
                         }
                     }
+                }
+            }
+
+            if (isNoteDeleteClicked) {
+                if (notesId != 0L) {
+                    CustomDialog(
+                        title = "Delete Note",
+                        description = "Are you sure you want to delete this note?",
+                        onConfirm = {
+                            isNoteDeleteClicked = false
+                            if (notesId != null) {
+                                viewModel.deleteNotes(notesId)
+                                Toast.makeText(context, "Deleted Successfully", Toast.LENGTH_SHORT)
+                                    .show()
+                                coroutineScope.launch {
+                                    withContext(Dispatchers.Main) {
+                                        navHostController.popBackStack()
+                                    }
+                                }
+                            }
+                        },
+                        onCancel = {
+                            isNoteDeleteClicked = false
+                        }
+                    )
+                } else {
+                    isNoteDeleteClicked = false
+                    Toast.makeText(context, "Note is not added yet", Toast.LENGTH_SHORT).show()
                 }
             }
         },
 
         snackbarHost = {
             CustomSnackBar(
-                snackBarHostState = snackbarHostState,
+                snackBarHostState = snackBarHostState,
                 icon = if (areFieldEmpty) Icons.Filled.Error else Icons.Filled.Check,
                 isError = areFieldEmpty
             )
         })
 }
 
+fun updateNote(
+    viewModel: NotesViewModel,
+    title: String,
+    description: String,
+    imageUri: List<Uri>,
+    notesId: Long,
+    color: String?,
+    isPinned: Boolean
+) {
+    viewModel.updateNotes(
+        title = title,
+        description = description,
+        imageUri = imageUri,
+        notesId = notesId,
+        drawingPaths = null,
+        color = color,
+        isPinned = isPinned
+    )
+}
 
 @Composable
-fun ImageItem(imageUri: Uri, onCancel: () -> Unit) {
+fun GraphicsItem(
+    imageUri: Uri,
+    onCancel: () -> Unit,
+    isDrawing: Boolean = false,
+    modifier: Modifier = Modifier
+) {
     Box(
         modifier = Modifier
+            .background(Color.White)
             .fillMaxWidth()
+            .takeIf { isDrawing } ?: Modifier
             .wrapContentHeight()
     ) {
         val screenHeight = LocalConfiguration.current.screenHeightDp
         Image(
             painter = rememberAsyncImagePainter(imageUri),
             contentDescription = "Selected Image",
-            modifier = Modifier
-                .fillMaxWidth()
+            modifier = modifier
                 .heightIn(max = screenHeight.dp / 3),
-            contentScale = ContentScale.Crop
+            contentScale = if (isDrawing) ContentScale.None else ContentScale.Crop
         )
 
         Box(
@@ -410,8 +484,6 @@ fun ImageItem(imageUri: Uri, onCancel: () -> Unit) {
 }
 
 
-
-
 @Composable
 fun DisplayPaths(paths: List<Pair<Path, PathProperties>>, onClose: () -> Unit) {
     val pathBounds = remember(paths) {
@@ -428,7 +500,7 @@ fun DisplayPaths(paths: List<Pair<Path, PathProperties>>, onClose: () -> Unit) {
                 left = minOf(acc.left, pathBounds.left),
                 top = minOf(acc.top, pathBounds.top - 32),
                 right = maxOf(acc.right, pathBounds.right),
-                bottom = maxOf(acc.bottom+ 32, pathBounds.bottom + 32)
+                bottom = maxOf(acc.bottom + 32, pathBounds.bottom + 32)
             )
         }
     }
@@ -504,7 +576,78 @@ fun checkIfFieldEmpty(fieldKey: String): Boolean {
     return fieldKey.isEmpty()
 }
 
+//Used for combining - now need now
 sealed class CanvasItem {
     data class ImageItem(val uri: Uri) : CanvasItem()
     data class DrawingItem(val pathData: List<Pair<Path, PathProperties>>) : CanvasItem()
+}
+
+class PositionManager {
+
+    private val positions = HashMap<Int, PositionHandler>()
+    private lateinit var parent: LayoutCoordinates
+
+    var isParentSet = false
+        private set
+
+    private var currentHeight: Int = 0
+
+    private var scrollToConsumeForKeyboard: Float = 0F
+
+    fun setupParent(layoutCoordinates: LayoutCoordinates) {
+        parent = layoutCoordinates
+        if (parent.size.height != 0)
+            isParentSet = true
+    }
+
+    fun registerPosition(index: Int, positionHandler: PositionHandler) {
+        positions[index] = positionHandler
+    }
+
+    fun getScrollAmount(index: Int): Float {
+        return positions[index]?.calculateOffset(
+            scrollToConsumeForKeyboard,
+            parent,
+            scrollToConsumeForKeyboard == currentHeight.toFloat()
+        ) ?: 0F
+    }
+
+    fun setCurrentHeight(currentHeight: Int) {
+
+        scrollToConsumeForKeyboard =
+            if (this.currentHeight != 0 && currentHeight != 0 && this.currentHeight != currentHeight) {
+                (currentHeight - this.currentHeight).toFloat()
+            } else currentHeight.toFloat()
+
+        this.currentHeight = currentHeight
+    }
+
+
+}
+
+@Composable
+fun keyboardAsState(): State<Boolean> {
+    val isImeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+    return rememberUpdatedState(isImeVisible)
+}
+
+class PositionHandler(
+    layoutCoordinates: LayoutCoordinates,
+    private val paddingBottomPx: Float
+) {
+
+    private val bottom = layoutCoordinates.boundsInWindow().bottom
+
+    fun calculateOffset(
+        keyboardHeight: Float,
+        parent: LayoutCoordinates,
+        consumePadding: Boolean
+    ): Float {
+
+        val parentBottom = parent.boundsInWindow().bottom
+
+        val newBottom = parentBottom - keyboardHeight
+        return bottom - newBottom + if (consumePadding) paddingBottomPx else 0F
+    }
+
 }

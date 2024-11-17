@@ -1,8 +1,9 @@
 package io.jadu.pages.presentation.viewmodel
 
-import CanvasItem
+
 import android.net.Uri
 import android.util.Log
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -43,8 +44,12 @@ class NotesViewModel @Inject constructor(
     private val _updatedNotes = MutableStateFlow<List<Notes>>(emptyList())
     val updatedNotes: StateFlow<List<Notes>> get() = _updatedNotes
 
-    private val _imageUriList = MutableStateFlow<List<Uri?>>(emptyList())
-    val imageUriList: StateFlow<List<Uri?>> get() = _imageUriList
+    private val _imageUriList = MutableStateFlow<List<Uri>>(emptyList())
+    val imageUriList: StateFlow<List<Uri>> get() = _imageUriList
+
+
+    private val _notesState = MutableStateFlow(NotesState())
+    val notesState: StateFlow<NotesState> get() = _notesState
 
     private val _drawingPathList = MutableStateFlow<List<List<Pair<Path, PathProperties>>>>(emptyList())
     val drawingPathList: StateFlow<List<List<Pair<Path, PathProperties>>>> get() = _drawingPathList
@@ -61,17 +66,12 @@ class NotesViewModel @Inject constructor(
         _imageUriList.value = emptyList()
     }
 
-    fun addDrawingPath(drawPath: List<Pair<Path, PathProperties>>) {
-        _drawingPathList.value += listOf(drawPath)
+    fun addNotesState(notes: NotesState) {
+        _notesState.value = notes
     }
 
-    fun removeDrawingPath(drawPath: List<Pair<Path, PathProperties>>) {
-            _drawingPathList.value -= listOf(drawPath)
-    }
-
-
-    fun clearDrawingPathList() {
-        _drawingPathList.value = emptyList()
+    fun removeNotesStates() {
+        _notesState.value = NotesState()
     }
 
     fun addNotes(note: Notes) = viewModelScope.launch {
@@ -82,12 +82,13 @@ class NotesViewModel @Inject constructor(
     fun updateNotes(
         title: String,
         description: String?,
-        imageUri: String?,
+        imageUri: List<Uri>?,
+        drawingPaths: List<List<Pair<Path, PathProperties>>>?,
         notesId: Long,
         color: String?,
         isPinned: Boolean
     ) = viewModelScope.launch {
-        updateNotesUseCase.invoke(title, description, imageUri, notesId, color, isPinned)
+        updateNotesUseCase.invoke(title, description, imageUri,drawingPaths, notesId, color, isPinned)
         //getNotesPaginated(10, 0)
     }
 
@@ -126,40 +127,16 @@ class NotesViewModel @Inject constructor(
                 }
 
                 val newNoteIds = newNotes.map { it.id }.toSet()
-                _notes.value =
-                    currentNotes.filter { it.id in newNoteIds || currentNotes.indexOf(it) < currentNotes.size }
+                _notes.value = currentNotes.filter { it.id in newNoteIds || currentNotes.indexOf(it) < currentNotes.size }
             }
         }
     }
-
-    private val _canvasItems = MutableStateFlow<List<CanvasItem>>(emptyList())
-    val canvasItems: StateFlow<List<CanvasItem>> = _canvasItems
-
-    // Function to add image
-    fun addImageUri(imageUri: Uri) {
-        Log.d("ImageUri", "ImageUri: ${_canvasItems.value.size}")
-        _canvasItems.value += CanvasItem.ImageItem(imageUri)
-    }
-
-    // Function to add drawing path
-    fun addDrawingPathCanvas(drawing: List<Pair<Path, PathProperties>>) {
-        _canvasItems.value += CanvasItem.DrawingItem(drawing)
-    }
-
-    // Function to remove an image
-    fun removeImageUriCanvas(imageUri: Uri) {
-        _canvasItems.value -= CanvasItem.ImageItem(imageUri)
-       /* _canvasItems.value = _canvasItems.value.filterNot {
-            it is CanvasItem.ImageItem && it.uri == imageUri
-        }*/
-    }
-
-    // Function to remove drawing path
-    fun removeDrawingPathCanvas(drawing: List<Pair<Path, PathProperties>>) {
-        _canvasItems.value = _canvasItems.value.filterNot {
-            it is CanvasItem.DrawingItem && it.pathData == drawing
-        }
-    }
-
-
 }
+
+data class NotesState(
+    val title: String = "",
+    val description: String = "",
+    val color : Color = Color.Black,
+    val isPinned: Boolean = false,
+    val shouldScroll : Boolean = false
+)

@@ -1,10 +1,9 @@
 package io.jadu.pages
 
 import AddNewPage
+import android.graphics.Bitmap
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContent
@@ -29,7 +28,6 @@ import androidx.compose.material3.Scaffold
 import androidx.navigation.NavHostController
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -38,12 +36,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -54,7 +53,9 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 import dagger.hilt.android.AndroidEntryPoint
 import io.jadu.pages.core.Constants
 import io.jadu.pages.core.PreferencesManager
+import io.jadu.pages.core.Utils
 import io.jadu.pages.domain.model.BottomNavigationItem
+import io.jadu.pages.domain.model.Notes
 import io.jadu.pages.domain.model.PathProperties
 import io.jadu.pages.presentation.components.BottomNavigationBar
 import io.jadu.pages.presentation.navigation.NavigationItem
@@ -65,12 +66,11 @@ import io.jadu.pages.presentation.screens.TodoPage
 import io.jadu.pages.presentation.screens.draw.DrawingApp
 import io.jadu.pages.presentation.screens.introScreens.IntroPager
 import io.jadu.pages.presentation.screens.introScreens.IntroScreenTwo
+import io.jadu.pages.presentation.viewmodel.NotesState
 import io.jadu.pages.presentation.viewmodel.NotesViewModel
 import io.jadu.pages.presentation.viewmodel.TodoViewModel
 import io.jadu.pages.ui.theme.PagesTheme
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import java.io.File
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -105,7 +105,7 @@ fun AppNavHost(
     val isIntroScreen = preferencesManager.getBoolean(Constants.IS_INTRO_SHOWN)
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.story))
     var drawPath by remember { mutableStateOf(List(0) { Pair(Path(), PathProperties()) }) }
-
+    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
 
     NavHost(
         modifier = Modifier,
@@ -116,13 +116,13 @@ fun AppNavHost(
             DisposableEffect(Unit) {
                 drawPath = emptyList()
                 viewModel.clearImageUriList()
-                viewModel.clearDrawingPathList()
+                viewModel.removeNotesStates()
                 onDispose {}
             }
             NotesApp(navHostController, viewModel, todoViewModel)
         }
         composable(NavigationItem.CreateNotes.route) {
-            AddNewPage(viewModel, navHostController, drawPath = drawPath)
+            AddNewPage(viewModel, navHostController, drawPath = drawPath, bitmap = bitmap)
         }
         composable(
             "note/{nodeId}",
@@ -131,7 +131,7 @@ fun AppNavHost(
             )
         ) { navBackStackEntry ->
             val nodeId = navBackStackEntry.arguments?.getLong("nodeId")
-            AddNewPage(viewModel, navHostController, nodeId, drawPath)
+            AddNewPage(viewModel, navHostController, nodeId, drawPath, bitmap)
         }
 
         composable(NavigationItem.SettingsPage.route) {
@@ -165,14 +165,15 @@ fun AppNavHost(
         composable(NavigationItem.DrawPage.route) {
             DrawingApp(
                 PaddingValues(8.dp), navHostController,
-                pathClick = { path ->
-                    //drawPath = path
-                    viewModel.addDrawingPath(path)
-                    viewModel.addDrawingPathCanvas(path)
+                pathClick = { drawing ->
+                    bitmap = Utils().captureDrawingCompose(drawing).asAndroidBitmap()
+                    val uri = bitmap?.let { Utils().saveBitmapToUri(context, it, "drawing${System.currentTimeMillis()}.png") }
+                    if(uri!=null){
+                        viewModel.addImageUris(uri)
+                    }
                 }
             )
         }
-
     }
 
     if (!isIntroScreen) {
@@ -185,6 +186,7 @@ fun AppNavHost(
 
 }
 
+
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun NotesApp(
@@ -192,9 +194,6 @@ fun NotesApp(
     viewModel: NotesViewModel,
     todoViewModel: TodoViewModel
 ) {
-    /*var onCardSelected by remember {
-        mutableStateOf(false)
-    }*/
     var selectedItemIndex by rememberSaveable {
         mutableIntStateOf(0)
     }
