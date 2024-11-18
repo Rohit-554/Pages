@@ -90,6 +90,12 @@ dependencies {
     implementation ("com.airbnb.android:lottie-compose:6.6.0")
     implementation ("com.google.code.gson:gson:2.11.0")
 
+    val paging_version = "3.3.4"
+
+    implementation("androidx.paging:paging-runtime:$paging_version")
+    implementation("androidx.paging:paging-compose:3.3.4")
+    implementation("androidx.room:room-paging:2.6.1")
+
 }
 
 kapt {

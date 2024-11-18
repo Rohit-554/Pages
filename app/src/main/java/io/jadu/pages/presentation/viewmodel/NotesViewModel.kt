@@ -7,6 +7,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.jadu.pages.domain.model.Notes
 import io.jadu.pages.domain.model.PathProperties
@@ -16,6 +18,7 @@ import io.jadu.pages.domain.usecase.GetNotesPaginatedUseCase
 import io.jadu.pages.domain.usecase.SearchNoteUseCase
 import io.jadu.pages.domain.usecase.UpdateNotesPositionUseCase
 import io.jadu.pages.domain.usecase.UpdateNotesUseCase
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -50,6 +53,8 @@ class NotesViewModel @Inject constructor(
 
     private val _notesState = MutableStateFlow(NotesState())
     val notesState: StateFlow<NotesState> get() = _notesState
+
+    val notesFlow: Flow<PagingData<Notes>> = getNotesPaginatedUseCase().cachedIn(viewModelScope)
 
     private val _drawingPathList = MutableStateFlow<List<List<Pair<Path, PathProperties>>>>(emptyList())
     val drawingPathList: StateFlow<List<List<Pair<Path, PathProperties>>>> get() = _drawingPathList
@@ -113,7 +118,8 @@ class NotesViewModel @Inject constructor(
         Collections.swap(currentNotes, index1, index2)
         _notes.value = currentNotes
     }
-    fun getNotesPaginated(limit: Int, offset: Int) {
+
+    /*fun getNotesPaginated(limit: Int, offset: Int) {
         viewModelScope.launch {
             getNotesPaginatedUseCase(limit, offset).collect { newNotes ->
                 val currentNotes = _notes.value.toMutableList()
@@ -130,7 +136,7 @@ class NotesViewModel @Inject constructor(
                 _notes.value = currentNotes.filter { it.id in newNoteIds || currentNotes.indexOf(it) < currentNotes.size }
             }
         }
-    }
+    }*/
 }
 
 data class NotesState(

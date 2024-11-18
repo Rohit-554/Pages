@@ -2,6 +2,9 @@ package io.jadu.pages.data.repository
 
 import android.net.Uri
 import androidx.compose.ui.graphics.Path
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
 import io.jadu.pages.data.dao.NotesDao
 import io.jadu.pages.domain.model.Notes
 import io.jadu.pages.domain.model.PathProperties
@@ -12,8 +15,15 @@ import javax.inject.Inject
 class NotesRepositoryImpl @Inject constructor(
     private val notesDao: NotesDao
 ): NotesRepository {
-    override fun getNotesPaginated(limit: Int, offset: Int): Flow<List<Notes>> {
-        return notesDao.getNotesPaginated(limit, offset)
+
+    override fun getNotesPaginated(): Flow<PagingData<Notes>> {
+        return Pager(
+            config = PagingConfig(
+                pageSize = 8   ,
+                enablePlaceholders = false
+            ),
+            pagingSourceFactory = { notesDao.getNotesPaginated() }
+        ).flow
     }
 
     override suspend fun addNotes(note: Notes) {

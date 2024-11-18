@@ -80,6 +80,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.paging.LoadState
+import androidx.paging.compose.collectAsLazyPagingItems
 import io.jadu.pages.domain.model.Notes
 import io.jadu.pages.presentation.components.CustomDialog
 import io.jadu.pages.presentation.components.CustomFab
@@ -101,7 +103,7 @@ fun HomePage(
     onCardSelected: (Boolean) -> Unit
 ) {
     val context = LocalContext.current
-    val notes = viewModel.notes.collectAsState(initial = emptyList()).value
+   // val notes = viewModel.notes.collectAsState(initial = emptyList()).value
     val lazyStaggeredGridState = rememberLazyStaggeredGridState()
     var offset by remember { mutableIntStateOf(0) }
     val limit = 15
@@ -115,23 +117,13 @@ fun HomePage(
     var backPressHandled by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     val isDeletePressed = remember { mutableStateOf(false) }
+    val pagingNotes = viewModel.notesFlow.collectAsLazyPagingItems()
+    val notes = pagingNotes.itemSnapshotList.items
 
-    LaunchedEffect(key1 = notes) {
-        viewModel.getNotesPaginated(limit, offset)
-    }
 
     LaunchedEffect(selectedNotes) {
         onCardSelected(selectedNotes.isNotEmpty())
         multipleSelectedForDelete = selectedNotes.isNotEmpty()
-    }
-
-    fun swapNotes(note1: Notes, note2: Notes) {
-        val index1 = notes.indexOf(note1)
-        val index2 = notes.indexOf(note2)
-
-        if (index1 != -1 && index2 != -1) {
-            viewModel.swapNotes(index1, index2)
-        }
     }
 
     // Function to delete selected notes
@@ -179,14 +171,15 @@ fun HomePage(
                 )
             } else {
                 HomeTopAppBar(
-                    onSearchClick = {},
+                    onSearchClick = {
+
+                    },
                     onMenuClick = {
                         navHostController.navigate(NavigationItem.SettingsPage.route)
-                        //isMenuExpanded = !isMenuExpanded
                     },
                     onSearchTextChange = { searchText ->
                         if (searchText.isEmpty()) {
-                            viewModel.getNotesPaginated(limit, offset)
+                            //viewModel.getNotesPaginated(limit, offset)
                         }
                         viewModel.searchNotes(searchText)
                     },
@@ -318,7 +311,7 @@ fun HomePage(
                                     ) {
                                         isLoading = true
                                         offset += limit
-                                        viewModel.getNotesPaginated(limit, offset)
+                                        //viewModel.getNotesPaginated(limit, offset)
                                         isLoading = false
                                     }
                                 }
@@ -341,6 +334,32 @@ fun HomePage(
                     if (isLoading) {
                         item {
                             CircularProgressIndicator(modifier = Modifier.padding(16.dp))
+                        }
+                    }
+
+                    pagingNotes.apply {
+                        when {
+                            loadState.refresh is LoadState.Loading -> {
+                                item {
+                                    // Show loading indicator during initial load
+                                    CircularProgressIndicator(modifier = Modifier.fillMaxWidth().padding(16.dp))
+                                }
+                            }
+                            loadState.append is LoadState.Loading -> {
+                                item {
+                                    // Show loading indicator while loading more items
+                                    CircularProgressIndicator(modifier = Modifier.fillMaxWidth().padding(16.dp))
+                                }
+                            }
+                            loadState.append is LoadState.Error -> {
+                                item {
+                                    // Show retry message or error handling UI
+                                    Text(
+                                        text = "Error loading more notes. Please try again.",
+                                        modifier = Modifier.fillMaxWidth().padding(16.dp)
+                                    )
+                                }
+                            }
                         }
                     }
                 }

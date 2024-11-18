@@ -3,6 +3,7 @@ package io.jadu.pages.data.dao
 import android.net.Uri
 import android.provider.ContactsContract.CommonDataKinds.Note
 import androidx.compose.ui.graphics.Path
+import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
@@ -15,8 +16,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface NotesDao {
-    @Query("SELECT * FROM notes ORDER BY position ASC LIMIT :limit OFFSET :offset")
-    fun getNotesPaginated(limit: Int, offset: Int): Flow<List<Notes>>
+    @Query("SELECT * FROM notes ORDER BY position ASC")
+    fun getNotesPaginated(): PagingSource<Int, Notes>
+
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun addNotes(note: Notes)

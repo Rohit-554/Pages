@@ -51,6 +51,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.navigation.NavHostController
+import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.rememberAsyncImagePainter
 import io.jadu.pages.domain.model.Notes
 import io.jadu.pages.domain.model.PathProperties
@@ -83,7 +84,8 @@ fun AddNewPage(
     val snackBarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
-    val notes = viewModel.notes.collectAsState(initial = emptyList()).value
+    val pagingNotes = viewModel.notesFlow.collectAsLazyPagingItems()
+    val notes = pagingNotes.itemSnapshotList.items
     val toolBarText = if (notesId != 0L) "Update Note" else "Add New Note"
     val defaultColor = MaterialTheme.colorScheme.background
 
@@ -106,6 +108,7 @@ fun AddNewPage(
 
     LaunchedEffect(notesId, notes) {
         if (notesId != 0L) {
+            Log.d("AddNewPagexx", "notesId: $notesId")
             val note = notes.find { it.id == notesId }
             if (note != null) {
                 title = TextFieldValue(note.title)
@@ -307,7 +310,7 @@ fun AddNewPage(
             ) {
                 Column(
                     modifier = Modifier
-                        .padding(16.dp)
+                        .padding(start = 16.dp, end = 16.dp)
                         .fillMaxHeight()
                         .fillMaxWidth()
                         .verticalScroll(scrollState, reverseScrolling = true),
