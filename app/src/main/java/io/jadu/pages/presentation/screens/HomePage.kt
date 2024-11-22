@@ -1,55 +1,36 @@
 package io.jadu.pages.presentation.screens
 
 import android.net.Uri
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PushPin
-import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.PushPin
-import androidx.compose.material.icons.outlined.Remove
-import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -64,18 +45,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.layout.boundsInParent
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -87,12 +62,13 @@ import io.jadu.pages.presentation.components.CustomDialog
 import io.jadu.pages.presentation.components.CustomFab
 import io.jadu.pages.presentation.components.HomeTopAppBar
 import io.jadu.pages.presentation.components.NoteCard
+import io.jadu.pages.presentation.components.ShimmerPlaceholderCard
 import io.jadu.pages.presentation.navigation.NavigationItem
 import io.jadu.pages.presentation.viewmodel.NotesViewModel
 import io.jadu.pages.ui.theme.ButtonBlue
 import kotlinx.coroutines.android.awaitFrame
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.selects.select
 import kotlin.math.sqrt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -100,7 +76,8 @@ import kotlin.math.sqrt
 fun HomePage(
     viewModel: NotesViewModel,
     navHostController: NavHostController,
-    onCardSelected: (Boolean) -> Unit
+    onCardSelected: (Boolean) -> Unit,
+    notes: List<Notes>,
 ) {
     val context = LocalContext.current
    // val notes = viewModel.notes.collectAsState(initial = emptyList()).value
@@ -118,20 +95,27 @@ fun HomePage(
     val coroutineScope = rememberCoroutineScope()
     val isDeletePressed = remember { mutableStateOf(false) }
     val pagingNotes = viewModel.notesFlow.collectAsLazyPagingItems()
-    val notes = pagingNotes.itemSnapshotList.items
-
+    //val notes = pagingNotes.itemSnapshotList.items
+    val isSearchedClicked  = remember { mutableStateOf(false) }
+    val searchText by viewModel.searchText.collectAsState()
+    val isSearching by viewModel.isSearching.collectAsState()
 
     LaunchedEffect(selectedNotes) {
         onCardSelected(selectedNotes.isNotEmpty())
         multipleSelectedForDelete = selectedNotes.isNotEmpty()
     }
 
+    LaunchedEffect(Unit) {
+        delay(2000)
+        isLoading = false
+    }
+
     // Function to delete selected notes
     fun deleteSelectedNotes() {
         selectedNotes.forEach { note ->
-            viewModel.deleteNotes(note.id) // Call ViewModel to delete
+            viewModel.deleteNotes(note.id)
         }
-        selectedNotes.clear() // Clear the selection after deletion
+        selectedNotes.clear()
     }
 
     Scaffold(
@@ -172,16 +156,13 @@ fun HomePage(
             } else {
                 HomeTopAppBar(
                     onSearchClick = {
-
+                        isSearchedClicked.value = true
                     },
                     onMenuClick = {
                         navHostController.navigate(NavigationItem.SettingsPage.route)
                     },
                     onSearchTextChange = { searchText ->
-                        if (searchText.isEmpty()) {
-                            //viewModel.getNotesPaginated(limit, offset)
-                        }
-                        viewModel.searchNotes(searchText)
+                        viewModel.onSearchTextChanged(searchText)
                     },
                 )
             }
@@ -265,118 +246,122 @@ fun HomePage(
                 FloatingActionMenu(isMenuExpanded, navHostController) { isMenuExpanded = false }
             }
         }
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .padding(16.dp),
-        ) {
-            if (notes.isNotEmpty()) {
-                val pinnedNotes = notes.filter { it.isPinned }
-                val unpinnedNotes = notes.filter { !it.isPinned }
+        if(isSearching){
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }else {
+            if (isLoading) {
+                // Show shimmer effect
                 LazyVerticalStaggeredGrid(
                     columns = StaggeredGridCells.Fixed(2),
-                    state = lazyStaggeredGridState,
                     modifier = Modifier.fillMaxSize(),
                     verticalItemSpacing = 8.dp,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    if (pinnedNotes.isNotEmpty()) {
-                        itemsIndexed(pinnedNotes) { index, note ->
-                            ShowNotes(
-                                note,
-                                navHostController,
-                                selectedNotes,
-                                multipleSelectedForDelete
-                            )
-                        }
+                    items(6) { // Adjust the number of shimmer placeholders
+                        ShimmerPlaceholderCard()
                     }
-                    if (unpinnedNotes.isNotEmpty()) {
-                        itemsIndexed(unpinnedNotes) { index, note ->
-                            ShowNotes(
-                                note,
-                                navHostController,
-                                selectedNotes,
-                                multipleSelectedForDelete
-                            )
-                        }
-                    }
-
-
-                    item {
-                        LaunchedEffect(lazyStaggeredGridState) {
-                            snapshotFlow { lazyStaggeredGridState.layoutInfo.visibleItemsInfo }
-                                .collect { visibleItems ->
-                                    if (visibleItems.isNotEmpty() &&
-                                        visibleItems.last().index == notes.size - 1 && !isLoading
-                                    ) {
-                                        isLoading = true
-                                        offset += limit
-                                        //viewModel.getNotesPaginated(limit, offset)
-                                        isLoading = false
-                                    }
-                                }
-                        }
-                    }
-                    if (selectedNotes.isNotEmpty()) {
-                        Log.d("HomePagex", "SelectedNotes: $selectedNotes")
-                        item {
-                            Column(
-                                Modifier.fillMaxSize(),
-                                verticalArrangement = Arrangement.Center,
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-
-                            }
-
-                        }
-                    }
-
-                    if (isLoading) {
-                        item {
-                            CircularProgressIndicator(modifier = Modifier.padding(16.dp))
-                        }
-                    }
-
-                    pagingNotes.apply {
-                        when {
-                            loadState.refresh is LoadState.Loading -> {
-                                item {
-                                    // Show loading indicator during initial load
-                                    CircularProgressIndicator(modifier = Modifier.fillMaxWidth().padding(16.dp))
-                                }
-                            }
-                            loadState.append is LoadState.Loading -> {
-                                item {
-                                    // Show loading indicator while loading more items
-                                    CircularProgressIndicator(modifier = Modifier.fillMaxWidth().padding(16.dp))
-                                }
-                            }
-                            loadState.append is LoadState.Error -> {
-                                item {
-                                    // Show retry message or error handling UI
-                                    Text(
-                                        text = "Error loading more notes. Please try again.",
-                                        modifier = Modifier.fillMaxWidth().padding(16.dp)
+                }
+            }else{
+                Column(
+                    modifier = Modifier
+                        .padding(innerPadding)
+                        .padding(start = 16.dp, end = 16.dp, top = 8.dp),
+                ) {
+                    if (notes.isNotEmpty()) {
+                        val pinnedNotes = notes.filter { it.isPinned }
+                        val unpinnedNotes = notes.filter { !it.isPinned }
+                        LazyVerticalStaggeredGrid(
+                            columns = StaggeredGridCells.Fixed(2),
+                            state = lazyStaggeredGridState,
+                            modifier = Modifier.fillMaxSize(),
+                            verticalItemSpacing = 8.dp,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            if (pinnedNotes.isNotEmpty()) {
+                                itemsIndexed(pinnedNotes) { index, note ->
+                                    ShowNotes(
+                                        note,
+                                        navHostController,
+                                        selectedNotes,
+                                        multipleSelectedForDelete,
+                                        viewModel
                                     )
                                 }
                             }
+                            if (unpinnedNotes.isNotEmpty()) {
+                                itemsIndexed(unpinnedNotes) { index, note ->
+                                    ShowNotes(
+                                        note,
+                                        navHostController,
+                                        selectedNotes,
+                                        multipleSelectedForDelete,
+                                        viewModel
+                                    )
+                                }
+                            }
+                            if (selectedNotes.isNotEmpty()) {
+                                item {
+                                    Column(
+                                        Modifier.fillMaxSize(),
+                                        verticalArrangement = Arrangement.Center,
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+
+                                    }
+
+                                }
+                            }
+
+                            pagingNotes.apply {
+                                when {
+                                    loadState.refresh is LoadState.Loading -> {
+                                        item {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.fillMaxWidth().padding(16.dp)
+                                            )
+                                        }
+                                    }
+
+                                    loadState.append is LoadState.Loading -> {
+                                        item {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.fillMaxWidth().padding(16.dp)
+                                            )
+                                        }
+                                    }
+
+                                    loadState.append is LoadState.Error -> {
+                                        item {
+                                            Text(
+                                                text = "Error loading more notes. Please try again.",
+                                                modifier = Modifier.fillMaxWidth().padding(16.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        Column(
+                            Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = " You haven't created any note yet \uD83D\uDE44, Click the + Icon to get started",
+                                style = MaterialTheme.typography.bodyLarge,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
                         }
                     }
-                }
-            } else {
-                Column(
-                    Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = " You haven't created any note yet \uD83D\uDE44, Click the + Icon to get started",
-                        style = MaterialTheme.typography.bodyLarge,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                    )
+
                 }
             }
-
         }
     }
 
@@ -386,6 +371,9 @@ fun HomePage(
             selectedNotes.clear()
         } else {
             backPressHandled = true
+            /*navHostController.currentBackStackEntry?.let {
+                android.util.Log.d("NavBackStack", "Route: ${it.destination.route}")
+            }*/
             coroutineScope.launch {
                 awaitFrame()
                 onBackPressedDispatcher?.onBackPressed()
@@ -400,7 +388,8 @@ fun ShowNotes(
     note: Notes,
     navHostController: NavHostController,
     selectedNotes: MutableList<Notes>,
-    multipleSelectedForDelete: Boolean
+    multipleSelectedForDelete: Boolean,
+    viewModel: NotesViewModel,
 ) {
     NoteCard(
         note = note,
@@ -417,7 +406,8 @@ fun ShowNotes(
             }
         },
         isSelected = selectedNotes.contains(note),
-        multipleSelectedForDelete = multipleSelectedForDelete
+        multipleSelectedForDelete = multipleSelectedForDelete,
+        viewmodel = viewModel
     )
 }
 

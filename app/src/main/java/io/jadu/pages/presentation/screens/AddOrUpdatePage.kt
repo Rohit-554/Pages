@@ -79,7 +79,7 @@ fun AddNewPage(
     navHostController: NavHostController,
     notesId: Long? = 0L,
     drawPath: List<Pair<Path, PathProperties>>,
-    bitmap: Bitmap?
+    bitmap: Bitmap?,
 ) {
     val snackBarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
@@ -107,6 +107,7 @@ fun AddNewPage(
 
 
     LaunchedEffect(notesId, notes) {
+        viewModel.onSearchTextChanged("")
         if (notesId != 0L) {
             Log.d("AddNewPagexx", "notesId: $notesId")
             val note = notes.find { it.id == notesId }

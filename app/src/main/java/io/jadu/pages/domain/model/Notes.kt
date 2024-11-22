@@ -20,7 +20,11 @@ data class Notes(
     var isPinned: Boolean = false,
     var date: Long = System.currentTimeMillis(),
     var color: String? = null
-)
+){
+    fun doesMatchSearchQuery(searchText: String): Boolean {
+        return title.contains(searchText, ignoreCase = true) || description?.contains(searchText, ignoreCase = true) == true
+    }
+}
 
 class Converters {
 

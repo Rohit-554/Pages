@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import io.jadu.pages.presentation.components.CustomTopAppBar
+import io.jadu.pages.presentation.viewmodel.NotesViewModel
 
 @Composable
 fun AboutPage(navHostController: NavHostController) {
@@ -60,7 +61,7 @@ fun AboutPage(navHostController: NavHostController) {
                         horizontalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            text = "Made With ❤️ by Strawberry Studios",
+                            text = "Made With ❤️ by StrawBox Studios",
                             fontSize = 16.sp,
                             modifier = Modifier.padding(top = 16.dp)
                         )

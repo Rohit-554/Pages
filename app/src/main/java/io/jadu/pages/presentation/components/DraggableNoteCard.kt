@@ -22,7 +22,7 @@ import io.jadu.pages.domain.model.Notes
 import io.jadu.pages.presentation.screens.findTargetIndex
 import kotlin.math.roundToInt
 
-@Composable
+/*@Composable
 fun DraggableNoteCard(
     note: Notes,
     notes: List<Notes>,
@@ -79,6 +79,14 @@ fun DraggableNoteCard(
             }
             .background(if (isSelected) Color.LightGray else Color.Transparent)
     ) {
-        NoteCard(note = note, navHostController = navHostController, onLongPress = {}, isSelected = false , onClick = {}, multipleSelectedForDelete = false)
+        NoteCard(
+            note = note,
+            navHostController = navHostController,
+            onLongPress = {},
+            isSelected = false,
+            onClick = {},
+            multipleSelectedForDelete = false,
+            viewmodel = viewModel
+        )
     }
-}
+}*/

@@ -91,10 +91,17 @@ dependencies {
     implementation ("com.google.code.gson:gson:2.11.0")
 
     val paging_version = "3.3.4"
+    val work_version = "2.9.1"
 
     implementation("androidx.paging:paging-runtime:$paging_version")
     implementation("androidx.paging:paging-compose:3.3.4")
     implementation("androidx.room:room-paging:2.6.1")
+    implementation("io.coil-kt.coil3:coil-compose:3.0.3")
+    implementation ("androidx.glance:glance-appwidget:1.1.1")
+
+    // For interop APIs with Material 3
+    implementation ("androidx.glance:glance-material3:1.1.0")
+    implementation("androidx.work:work-runtime-ktx:$work_version")
 
 }
 

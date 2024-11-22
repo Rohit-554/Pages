@@ -69,7 +69,11 @@ fun IntroScreenTwo(navHostController: NavHostController) {
         Spacer(modifier = Modifier.height(100.dp))
         OutlinedButton(
             onClick = {
-                navHostController.navigate( NavigationItem.Home.route)
+                navHostController.navigate(NavigationItem.Home.route) {
+                    popUpTo(0) {
+                        inclusive = true                    }
+                    launchSingleTop = true
+                }
             },
             modifier = Modifier.align(Alignment.CenterHorizontally).fillMaxWidth().height(48.dp).padding(horizontal = 16.dp)
             ,

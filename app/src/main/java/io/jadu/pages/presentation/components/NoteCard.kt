@@ -1,8 +1,5 @@
 package io.jadu.pages.presentation.components
 
-import DisplayPaths
-import android.util.Log
-import android.widget.Space
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -20,13 +17,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PushPin
-import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,11 +37,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
+import coil3.ImageLoader
+import coil3.compose.rememberAsyncImagePainter
+import coil3.request.CachePolicy
+import coil3.request.crossfade
 import io.jadu.pages.domain.model.Notes
 import io.jadu.pages.presentation.screens.parseColor
-import io.jadu.pages.presentation.screens.stringToUri
+import io.jadu.pages.presentation.viewmodel.NotesViewModel
 import io.jadu.pages.ui.theme.LightGray
 import java.util.Locale
 
@@ -57,7 +56,9 @@ fun NoteCard(
     isSelected: Boolean,
     onClick: () -> Unit,
     multipleSelectedForDelete: Boolean,
+    viewmodel: NotesViewModel,
 ) {
+    val context = LocalContext.current
     val screenHeight = LocalConfiguration.current.screenHeightDp
     val borderColor = if (isSelected) Color.White else Color.Transparent
     Box(
@@ -131,6 +132,7 @@ fun NoteCard(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
 
+
                 if (!note.imageUri.isNullOrEmpty() && note.imageUri!!.isNotEmpty()) {
                     key(note.imageUri!!.first()) {
                         note.imageUri!!.first().let { uri ->
@@ -140,7 +142,8 @@ fun NoteCard(
                                 ){
                                     Image(
                                         painter = rememberAsyncImagePainter(
-                                            model = uri
+                                            model = uri,
+                                            contentScale = ContentScale.Crop
                                         ),
                                         contentDescription = "Note Image",
                                         modifier = Modifier
@@ -152,7 +155,7 @@ fun NoteCard(
                             }else{
                                 Image(
                                     painter = rememberAsyncImagePainter(
-                                        model = uri
+                                        model = uri,
                                     ) ,
                                     contentDescription = "Note Image",
                                     modifier = Modifier

@@ -8,7 +8,13 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import io.jadu.pages.domain.model.BottomNavigationItem
 
 @Composable
@@ -16,12 +22,20 @@ fun BottomNavigationBar(
     items: List<BottomNavigationItem>,
     selectedItemIndex: Int,
     onItemSelected: (Int) -> Unit,
+    bottomBarHeight: (Dp) -> Unit
+
 ) {
-    NavigationBar {
+    val bottomBarH = remember { mutableStateOf(0.dp) }
+    NavigationBar(
+        modifier = Modifier.onGloballyPositioned { coordinates ->
+            bottomBarH.value = coordinates.size.height.dp
+        }
+    ) {
         items.forEachIndexed { index, item ->
             NavigationBarItem(
                 selected = selectedItemIndex == index,
                 onClick = {
+                    bottomBarHeight(bottomBarH.value)
                     onItemSelected(index)
                 },
                 label = {

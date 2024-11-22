@@ -4,21 +4,16 @@ import android.Manifest.permission.READ_EXTERNAL_STORAGE
 import android.Manifest.permission.READ_MEDIA_IMAGES
 import android.Manifest.permission.READ_MEDIA_VIDEO
 import android.Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED
-import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
-import android.util.Log
-import android.view.PixelCopy.Request
-import android.widget.Space
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -27,7 +22,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -35,25 +29,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsEndWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.NavigateNext
-import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.NavigateNext
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -81,39 +66,56 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.rememberAsyncImagePainter
 import io.jadu.pages.R
 import io.jadu.pages.core.Constants
 import io.jadu.pages.core.PreferencesManager
 import io.jadu.pages.presentation.components.CustomTopAppBar
 import io.jadu.pages.presentation.components.InfoCard
-import io.jadu.pages.presentation.components.RequestPermissionsAndPickDocument
+import io.jadu.pages.presentation.components.TextFieldDialogue
 import io.jadu.pages.presentation.navigation.NavigationItem
+import io.jadu.pages.presentation.viewmodel.NotesViewModel
 import io.jadu.pages.ui.theme.PagesTheme
 import io.jadu.pages.ui.theme.TickColor
 import io.jadu.pages.ui.theme.White
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 
 @Composable
-fun SettingsPage(navHostController: NavHostController) {
+fun SettingsPage(navHostController: NavHostController, viewModel: NotesViewModel) {
     val configuration = LocalConfiguration.current
     val screenHeightDp = configuration.screenHeightDp
     val cardHeightDp = screenHeightDp * 0.15f
     val context = LocalContext.current
     val preferencesManager = remember { PreferencesManager(context) }
-    var name by remember { mutableStateOf(preferencesManager.getName() ?: "Creator") }
-    val image by remember { mutableStateOf(preferencesManager.getString(Constants.GET_IMAGE) ?: "") }
+    var name by remember { mutableStateOf(preferencesManager.getName() ?: "") }
+    val image by remember {
+        mutableStateOf(
+            preferencesManager.getString(Constants.GET_IMAGE) ?: ""
+        )
+    }
+
     var previousName by remember { mutableStateOf(name) }
     var isEditing by remember { mutableStateOf(false) }
     var toastShown by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var isUploadPhotoClicked by remember { mutableStateOf(false) }
+    val pagingNotes = viewModel.notesFlow.collectAsLazyPagingItems()
+    val notes = pagingNotes.itemSnapshotList.items
+    val noteSize = notes.size
+    val totalPinnedNotes = notes.filter { it.isPinned }.size
+    var showDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(isEditing) {
         if (isEditing) {
@@ -204,7 +206,7 @@ fun SettingsPage(navHostController: NavHostController) {
                                     }
                             )
                         }
-                    }else{
+                    } else {
                         Box(
                             modifier = Modifier
                                 .size(30.dp)
@@ -281,7 +283,7 @@ fun SettingsPage(navHostController: NavHostController) {
                                 isUploadPhotoClicked = false
                             }
 
-                            if(image.isEmpty()) {
+                            if (image.isEmpty()) {
                                 if (selectedImageUri == null) {
                                     Image(
                                         painter = painterResource(id = R.drawable.avatar),
@@ -291,11 +293,10 @@ fun SettingsPage(navHostController: NavHostController) {
                                             .clip(RoundedCornerShape(50.dp))
                                             .clickable {
                                                 isUploadPhotoClicked = true
-                                            }
-                                        ,
+                                            },
                                         contentScale = ContentScale.Crop
                                     )
-                                }else{
+                                } else {
                                     Image(
                                         painter = rememberAsyncImagePainter(selectedImageUri),
                                         contentDescription = null,
@@ -360,30 +361,18 @@ fun SettingsPage(navHostController: NavHostController) {
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.onSurface
                                         ),
-
-                                        )
+                                        placeholder = {
+                                            Text(
+                                                text = "Add Your Name",
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                fontSize = 36.sp,
+                                                fontWeight = FontWeight.Normal,
+                                                fontStyle = FontStyle.Italic,
+                                                color = Color.Gray,
+                                            )
+                                        }
+                                    )
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    /*Icon(
-                                        imageVector = Icons.Default.Check,
-                                        contentDescription = "Save Name",
-                                        modifier = Modifier
-                                            .size(36.dp)
-                                            .clickable {
-                                                if (name.isEmpty()) {
-                                                    Toast
-                                                        .makeText(
-                                                            context,
-                                                            "Name cannot be empty",
-                                                            Toast.LENGTH_SHORT
-                                                        )
-                                                        .show()
-                                                    return@clickable
-                                                }
-                                                isEditing = false
-                                                preferencesManager.setName(name)
-                                            },
-                                        tint = TickColor
-                                    )*/
                                 }
                             } else {
                                 Row(
@@ -391,13 +380,24 @@ fun SettingsPage(navHostController: NavHostController) {
                                     horizontalArrangement = Arrangement.Center,
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    Text(
-                                        text = name,
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        fontSize = 36.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                    )
+                                    if(name.isEmpty()){
+                                        Text(
+                                            text = "Edit Your Name and Photo",
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            fontSize = 20.sp,
+                                            fontWeight = FontWeight.Normal,
+                                            fontStyle = FontStyle.Italic,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                        )
+                                    }else{
+                                        Text(
+                                            text = name,
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            fontSize = 36.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                        )
+                                    }
                                     Spacer(modifier = Modifier.width(12.dp))
                                 }
                             }
@@ -420,90 +420,155 @@ fun SettingsPage(navHostController: NavHostController) {
                     Column(
                         modifier = Modifier.fillMaxSize(),
                     ) {
-                        Row {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                                .height(cardHeightDp.dp)
+                        ) {
                             OutlinedCard(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp)
-                                    .height(cardHeightDp.dp),
+                                modifier = Modifier.fillMaxSize(),
                                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                             ) {
                                 Row(
                                     modifier = Modifier
                                         .fillMaxHeight()
-                                        .fillMaxWidth(), // Ensure the Row takes up full width
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
+                                        .fillMaxWidth()
                                 ) {
-                                    InfoCard(
-                                        title = "2100",
-                                        subtitle = "Notes",
-                                        modifier = Modifier.weight(1f)
+                                    // Container for the first InfoCard
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .fillMaxHeight(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        InfoCard(
+                                            title = noteSize.toString(),
+                                            subtitle = "Notes",
+                                            modifier = Modifier
+                                        )
+                                    }
+
+                                    // Divider
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxHeight()
+                                            .width(1.dp)
+                                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
                                     )
 
-                                    InfoCard(
-                                        title = "2100",
-                                        subtitle = "Notes",
-                                        modifier = Modifier.weight(1f)
-                                    )
-
-                                    InfoCard(
-                                        title = "2100",
-                                        subtitle = "Notes",
-                                        modifier = Modifier.weight(1f)
-                                    )
+                                    // Container for the second InfoCard
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .fillMaxHeight(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        InfoCard(
+                                            title = totalPinnedNotes.toString(),
+                                            subtitle = "Pinned",
+                                            modifier = Modifier
+                                        )
+                                    }
                                 }
                             }
                         }
-                        Spacer(modifier = Modifier.height(16.dp))
-                        OutlinedButton(
-                            onClick = {
-                                navHostController.navigate(NavigationItem.AboutPage.route)
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            shape = RoundedCornerShape(4.dp),
-                            elevation = ButtonDefaults.buttonElevation(
-                                defaultElevation = 2.dp,
-                                pressedElevation = 0.dp
-                            ),
-                            border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant),
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    text = "About Us!",
-                                    style = TextStyle(
-                                        fontFamily = MaterialTheme.typography.bodyLarge.fontFamily,
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Normal
-                                    ),
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.NavigateNext,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
 
-                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                        BorderButton(navHostController, "About Us", onClick = {
+                            navHostController.navigate(NavigationItem.AboutPage.route)
+                        }, subtitle = "Know more about us")
+                        BorderButton(
+                            navHostController,
+                            "FeedBack",
+                            onClick = {},
+                            subtitle = "Give us your valuable feedback"
+                        )
+                        BorderButton(navHostController, "Report A Bug", onClick = {
+                                showDialog = true
+                        }, subtitle = "Report any bugs you find")
                     }
                 }
             }
         }
+
+        if(showDialog){
+            TextFieldDialogue(
+                onDismissRequest = { showDialog = false },
+                onSubmit = { bugDescription ->
+                    println("Bug reported: $bugDescription")
+                }
+            )
+        }
     }
-
-
-
 }
 
+@Composable
+private fun BorderButton(
+    navHostController: NavHostController,
+    title: String,
+    onClick: () -> Unit,
+    subtitle: String
+) {
+    OutlinedButton(
+        onClick = {
+            onClick()
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 16.dp, start = 16.dp, end = 16.dp),
+        shape = RoundedCornerShape(4.dp),
+        elevation = ButtonDefaults.buttonElevation(
+            defaultElevation = 2.dp,
+            pressedElevation = 0.dp
+        ),
+        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant),
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text(
+                    text = title,
+                    style = TextStyle(
+                        fontFamily = MaterialTheme.typography.bodyLarge.fontFamily,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = subtitle,
+                    style = TextStyle(
+                        fontFamily = MaterialTheme.typography.bodySmall.fontFamily,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Normal
+                    ),
+                    color = Color.Gray
+                )
+            }
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.NavigateNext,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurface
+            )
+        }
+
+    }
+}
+
+fun Long.toFormattedDate(): String {
+    val date = Date(this)
+    val format = SimpleDateFormat("dd MMM yy", Locale.getDefault())
+    return format.format(date)
+}
+
+/*
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun PreviewSettingsPage() {
@@ -513,4 +578,4 @@ fun PreviewSettingsPage() {
             SettingsPage(NavHostController(context))
         }
     }
-}
+}*/

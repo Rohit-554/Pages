@@ -13,7 +13,8 @@ package io.jadu.pages.presentation.navigation
         Home,
         CreateTodo,
         SettingsPage,
-        DrawPage
+        DrawPage,
+        createTodo
     }
     sealed class NavigationItem(val route: String) {
         object Home : NavigationItem(Screen.Notes.name)
@@ -29,4 +30,5 @@ package io.jadu.pages.presentation.navigation
         object Home2 : NavigationItem(Screen.Home.name)
         object SettingsPage : NavigationItem(Screen.SettingsPage.name)
         object DrawPage : NavigationItem(Screen.DrawPage.name)
+        object createTodo : NavigationItem(Screen.createTodo.name)
     }
