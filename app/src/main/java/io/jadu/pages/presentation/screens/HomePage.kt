@@ -10,10 +10,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
@@ -52,11 +56,18 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.airbnb.lottie.LottieComposition
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.rememberLottieComposition
+import io.jadu.pages.R
 import io.jadu.pages.domain.model.Notes
 import io.jadu.pages.presentation.components.CustomDialog
 import io.jadu.pages.presentation.components.CustomFab
@@ -99,16 +110,21 @@ fun HomePage(
     val isSearchedClicked  = remember { mutableStateOf(false) }
     val searchText by viewModel.searchText.collectAsState()
     val isSearching by viewModel.isSearching.collectAsState()
-
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.sleepingbear))
+    val lottieComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.bear))
     LaunchedEffect(selectedNotes) {
         onCardSelected(selectedNotes.isNotEmpty())
         multipleSelectedForDelete = selectedNotes.isNotEmpty()
     }
+    var isBearTouched by remember { mutableStateOf(false) }
+
+
 
     LaunchedEffect(Unit) {
         delay(2000)
         isLoading = false
     }
+
 
     // Function to delete selected notes
     fun deleteSelectedNotes() {
@@ -348,15 +364,39 @@ fun HomePage(
                         }
                     } else {
                         Column(
-                            Modifier.fillMaxSize(),
+                            Modifier.fillMaxSize().wrapContentHeight(),
                             verticalArrangement = Arrangement.Center,
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text(
-                                text = " You haven't created any note yet \uD83D\uDE44, Click the + Icon to get started",
-                                style = MaterialTheme.typography.bodyLarge,
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                            )
+                            if(isBearTouched){
+                                LottieAnimation(
+                                    lottieComposition,
+                                    isPlaying = true,
+                                    iterations = LottieConstants.IterateForever,
+                                    modifier = Modifier
+                                        .size(250.dp)
+                                        .clickable {
+                                            isBearTouched = false
+                                        }
+                                )
+                                LottieSection(
+                                    text1 = "I warned you !",
+                                    text2 = "Now, Touch him again to make him sleep"
+                                )
+                            }else{
+                                LottieAnimation(
+                                    composition,
+                                    isPlaying = true,
+                                    iterations = LottieConstants.IterateForever,
+                                    modifier = Modifier.size(300.dp).clickable {
+                                        isBearTouched = true
+                                    }
+                                )
+                                LottieSection(
+                                    text1 = "Nothing found here!",
+                                    text2 = "& Beware of Bear! don't touch him"
+                                )
+                            }
                         }
                     }
 
@@ -381,6 +421,25 @@ fun HomePage(
             }
         }
     }
+}
+
+@Composable
+private fun LottieSection(
+    text1:String,
+    text2:String
+) {
+    Spacer(modifier = Modifier.height(8.dp))
+    Text(
+        modifier = Modifier.padding(bottom = 10.dp),
+        text = text1,
+        style = MaterialTheme.typography.bodyLarge,
+        textAlign = TextAlign.Center
+    )
+    Text(
+        text = text2,
+        style = MaterialTheme.typography.bodyLarge,
+        textAlign = TextAlign.Center
+    )
 }
 
 @Composable

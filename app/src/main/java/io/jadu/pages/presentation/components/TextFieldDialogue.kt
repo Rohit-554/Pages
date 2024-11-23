@@ -1,5 +1,9 @@
 package io.jadu.pages.presentation.components
 
+import android.content.Context
+import android.content.Intent
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,7 +17,6 @@ import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -21,7 +24,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,6 +36,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import papaya.`in`.sendmail.SendMail
+
+
 
 
 @Composable
@@ -42,7 +47,9 @@ fun TextFieldDialogue(
     onSubmit: (String) -> Unit
 ) {
     var bugDescription by remember { mutableStateOf("") }
-
+    var title by remember { mutableStateOf("") }
+    val email by remember { mutableStateOf("strawboxstudios@gmail.com") }
+    val context = androidx.compose.ui.platform.LocalContext.current
     Dialog(onDismissRequest = onDismissRequest) {
         Surface(
             shape = RoundedCornerShape(16.dp),
@@ -74,45 +81,29 @@ fun TextFieldDialogue(
                     )
                 }
 
-                // Multiline TextField
-                OutlinedTextField(
-                    value = bugDescription,
+
+                //createa a OutlinedTextField for the title
+                CustomTextField(
+                    title, onValueChange = { title = it },
+                    modifier = Modifier,
+                    "Title"
+                )
+                CustomTextField(
+                    bugDescription,
                     onValueChange = { bugDescription = it },
-                    label = {
-                        Text(
-                            "Describe the bug",
-                            style = TextStyle(
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontSize = 14.sp
-                            )
-                        )
-                    },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.onSurface,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        cursorColor = MaterialTheme.colorScheme.onSurface,
-                        selectionColors = TextSelectionColors(
-                            handleColor = MaterialTheme.colorScheme.onSurface,
-                            backgroundColor = MaterialTheme.colorScheme.surfaceVariant
-                        )
-                    ),
-                    placeholder = { Text("Type the issue here...") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(150.dp),
-                    textStyle = TextStyle(
-                        fontFamily = MaterialTheme.typography.bodyLarge.fontFamily,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 16.sp
-                    ),
-                    singleLine = false,
+                    modifier = Modifier.height(150.dp),
+                    "Description"
                 )
 
                 // Submit Button
                 Button(
                     onClick = {
-                        onSubmit(bugDescription)
-                        onDismissRequest()
+                        if(title.isNotEmpty()){
+                            sendEmail(email, title.trim(), bugDescription.trim(), context)
+                            onDismissRequest()
+                        }else {
+                            Toast.makeText(context, "Title cannot be empty", Toast.LENGTH_SHORT).show()
+                        }
                     },
                     modifier = Modifier
                         .align(Alignment.End)
@@ -127,4 +118,71 @@ fun TextFieldDialogue(
             }
         }
     }
+}
+
+fun sendEmail(email: String, title: String, bugDescription: String, context: Context) {
+    try {
+        val intent = Intent(Intent.ACTION_SEND)
+        intent.putExtra(Intent.EXTRA_EMAIL, arrayOf(email))
+        intent.putExtra(Intent.EXTRA_SUBJECT, title)
+        intent.putExtra(Intent.EXTRA_TEXT, bugDescription)
+        intent.type = "message/rfc822"
+        intent.setPackage("com.google.android.gm")
+
+        if (intent.resolveActivity(context.packageManager) != null) {
+            context.startActivity(intent)
+        } else {
+            context.startActivity(
+                Intent.createChooser(
+                    intent,
+                    "Choose an email client"
+                )
+            )
+        }
+    } catch (e: Exception) {
+        Toast.makeText(context, "Error sending email", Toast.LENGTH_SHORT).show()
+        Log.e("ErrorEmail", e.message.toString())
+    }
+}
+
+
+@Composable
+private fun CustomTextField(
+    title: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    label: String
+) {
+    OutlinedTextField(
+        value = title,
+        onValueChange = {
+            onValueChange(it)
+        },
+        label = {
+            Text(
+                label,
+                style = TextStyle(
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 14.sp
+                )
+            )
+        },
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = MaterialTheme.colorScheme.onSurface,
+            unfocusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            cursorColor = MaterialTheme.colorScheme.onSurface,
+            selectionColors = TextSelectionColors(
+                handleColor = MaterialTheme.colorScheme.onSurface,
+                backgroundColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+        ),
+        placeholder = { Text("Type the $title here...") },
+        modifier = modifier.fillMaxWidth(),
+        textStyle = TextStyle(
+            fontFamily = MaterialTheme.typography.bodyLarge.fontFamily,
+            color = MaterialTheme.colorScheme.onSurface,
+            fontSize = 16.sp
+        ),
+        singleLine = false,
+    )
 }

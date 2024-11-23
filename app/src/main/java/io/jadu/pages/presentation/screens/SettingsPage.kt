@@ -496,7 +496,6 @@ fun SettingsPage(navHostController: NavHostController, viewModel: NotesViewModel
             TextFieldDialogue(
                 onDismissRequest = { showDialog = false },
                 onSubmit = { bugDescription ->
-                    println("Bug reported: $bugDescription")
                 }
             )
         }

@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
@@ -74,7 +75,12 @@ import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavHostController
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.rememberLottieComposition
 import io.jadu.pages.ComposableLifecycle
+import io.jadu.pages.R
 import io.jadu.pages.TodoActivity
 import io.jadu.pages.domain.model.TodoModel
 import io.jadu.pages.presentation.components.AddTodoBottomSheet
@@ -109,7 +115,7 @@ fun TodoPage(
     )
     val keyboardController = LocalSoftwareKeyboardController.current
     var backPressHandled by remember { mutableStateOf(false) }
-
+    val lottieComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.bear2))
     LaunchedEffect(bottomSheetState) {
         if(!bottomSheetState.isVisible){
             keyboardController?.hide()
@@ -196,8 +202,15 @@ fun TodoPage(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    LottieAnimation(
+                        lottieComposition,
+                        isPlaying = true,
+                        iterations = LottieConstants.IterateForever,
+                        modifier = Modifier
+                            .size(300.dp)
+                    )
                     Text(
-                        text = "      No To-dos 🤒, Click the + Icon to get started",
+                        text = "Wohoo! You got no Tasks to do!",
                         style = MaterialTheme.typography.bodyLarge,
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )

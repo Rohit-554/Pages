@@ -102,6 +102,7 @@ dependencies {
     // For interop APIs with Material 3
     implementation ("androidx.glance:glance-material3:1.1.0")
     implementation("androidx.work:work-runtime-ktx:$work_version")
+    implementation ("com.github.1902shubh:SendMail:1.0.0")
 
 }
 
