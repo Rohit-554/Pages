@@ -1,5 +1,6 @@
 package io.jadu.pages.presentation.components
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -50,6 +51,7 @@ fun CustomTopAppBar(
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
     var isPinnedClicked by remember { mutableStateOf(isPinned) }
+    val context = androidx.compose.ui.platform.LocalContext.current
     TopAppBar(
         title = {
             Text(
@@ -126,8 +128,8 @@ fun CustomTopAppBar(
                             )
                         },
                         onClick = {
+                            Toast.makeText(context, "Coming Soon!", Toast.LENGTH_SHORT).show()
                             isMenuExpanded = false
-
                         }
                     )
                 }

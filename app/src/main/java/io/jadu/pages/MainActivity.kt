@@ -158,7 +158,7 @@ fun AppNavHost(
         }
 
         composable(NavigationItem.SettingsPage.route) {
-            SettingsPage(navHostController, viewModel)
+            SettingsPage(navHostController, viewModel,todoViewModel)
         }
 
         composable(NavigationItem.AboutPage.route) {
