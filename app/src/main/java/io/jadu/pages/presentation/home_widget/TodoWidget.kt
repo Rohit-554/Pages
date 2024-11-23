@@ -149,8 +149,9 @@ object TodoWidget : GlanceAppWidget() {
                                     Text(
                                         text = "No TO-DOs",
                                         style = TextStyle(
-                                            fontSize = 10.sp,
-                                            fontFamily = myCustomFontFamily
+                                            fontSize = 12.sp,
+                                            fontFamily = myCustomFontFamily,
+                                            color = GlanceTheme.colors.onSurface
                                         ),
                                         modifier = GlanceModifier.padding(bottom = 8.dp)
                                     )

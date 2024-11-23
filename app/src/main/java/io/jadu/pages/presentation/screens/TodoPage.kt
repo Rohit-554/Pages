@@ -1,13 +1,9 @@
 package io.jadu.pages.presentation.screens
 
-import android.app.Activity
 import android.content.Context
-import android.content.Intent
 import android.util.Log
 import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -45,15 +41,16 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.focus.FocusRequester
@@ -94,7 +91,6 @@ import io.jadu.pages.ui.theme.LightGray
 import io.jadu.pages.ui.theme.White
 import io.jadu.pages.ui.theme.onBackground
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.android.awaitFrame
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -387,6 +383,7 @@ fun Modifier.positionAwareImePadding() = composed {
 }
 
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ParentComposable(todoViewModel: TodoViewModel) {
     var isBottomSheetVisible by remember { mutableStateOf(true) }
@@ -395,11 +392,17 @@ fun ParentComposable(todoViewModel: TodoViewModel) {
     val coroutineScope = rememberCoroutineScope()
     var backPressHandled by remember { mutableStateOf(false) }
     val isImeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+    var isTextPresent by remember { mutableStateOf(false) }
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val bottomSheetState = androidx.compose.material.rememberModalBottomSheetState(
+        ModalBottomSheetValue.Expanded,
+        skipHalfExpanded = true
+    )
 
-
-    LaunchedEffect(isBottomSheetVisible) {
-        if (!isBottomSheetVisible) {
-            activity.finishAffinity()
+    LaunchedEffect(bottomSheetState.currentValue) {
+        if (bottomSheetState.currentValue == ModalBottomSheetValue.Hidden) {
+            keyboardController?.hide()
+            activity.finish()
         }
     }
 
@@ -424,11 +427,12 @@ fun ParentComposable(todoViewModel: TodoViewModel) {
                 .imePadding()
                 .background(Color.Transparent)
         ) {
-            if (isBottomSheetVisible) {
+            if (bottomSheetState.isVisible) {
                 AddTodoBottomSheet(
-                    isVisible = isBottomSheetVisible,
+                    bottomSheetState,
                     onDismiss = {
                         isBottomSheetVisible = false
+                        activity.finish()
                     },
                     onSave = { todoText ->
                         todoViewModel.addTodo(
@@ -441,6 +445,9 @@ fun ParentComposable(todoViewModel: TodoViewModel) {
                         Toast.makeText(context, "Saved Successfully", Toast.LENGTH_SHORT).show()
                         isBottomSheetVisible = false
                         activity.finish()
+                    },
+                    addedText = {
+                        isTextPresent = it.isNotEmpty()
                     }
                 )
             }

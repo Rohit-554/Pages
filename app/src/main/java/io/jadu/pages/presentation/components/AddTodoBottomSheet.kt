@@ -1,5 +1,6 @@
 package io.jadu.pages.presentation.components
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,8 +11,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ModalBottomSheetLayout
+import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.ModalBottomSheetValue
-import androidx.compose.material.Scaffold
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material3.ButtonDefaults
@@ -21,7 +22,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -29,37 +29,35 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import io.jadu.pages.TodoActivity
+import androidx.compose.ui.unit.sp
 import io.jadu.pages.ui.theme.ButtonBlue
 import io.jadu.pages.ui.theme.LightGray
 import io.jadu.pages.ui.theme.White
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun AddTodoBottomSheet(
-    isVisible: Boolean,
+    bottomSheetState: ModalBottomSheetState,
     onDismiss: () -> Unit,
     onSave: (String) -> Unit,
+    addedText: (String) -> Unit
 ) {
-    val bottomSheetState = androidx.compose.material.rememberModalBottomSheetState(
-        ModalBottomSheetValue.Expanded,
-        skipHalfExpanded = true
-    )
     val scope = rememberCoroutineScope()
     var newTodoText by remember { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
 
-    LaunchedEffect(isVisible) {
-        if (isVisible) {
+    LaunchedEffect(bottomSheetState.isVisible) {
+        if (bottomSheetState.isVisible) {
             scope.launch { bottomSheetState.show() }
             focusRequester.requestFocus()
         } else {
@@ -70,7 +68,8 @@ fun AddTodoBottomSheet(
 
     ModalBottomSheetLayout(
         sheetState = bottomSheetState,
-        sheetBackgroundColor = MaterialTheme.colorScheme.onBackground,
+        sheetBackgroundColor = MaterialTheme.colorScheme.surface,
+        sheetGesturesEnabled = true,
         sheetContent = {
             Column(
                 modifier = Modifier
@@ -83,7 +82,12 @@ fun AddTodoBottomSheet(
                 ) {
                     Text(
                         text = "Add TODO",
-                        style = MaterialTheme.typography.bodyLarge
+                        style = TextStyle(
+                            fontFamily = MaterialTheme.typography.bodyLarge.fontFamily,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp
+                        )
                     )
                     Icon(
                         modifier = Modifier.clickable {
@@ -101,9 +105,14 @@ fun AddTodoBottomSheet(
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = newTodoText,
-                    onValueChange = { newTodoText = it },
+                    onValueChange = {
+                        newTodoText = it
+                        addedText(it)
+                    },
                     label = { Text("TODO") },
-                    modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester),
                     colors = TextFieldDefaults.colors(
                         unfocusedContainerColor = LightGray,
                         focusedContainerColor = White,
@@ -138,4 +147,6 @@ fun AddTodoBottomSheet(
         }
     ) {
     }
+
+
 }
