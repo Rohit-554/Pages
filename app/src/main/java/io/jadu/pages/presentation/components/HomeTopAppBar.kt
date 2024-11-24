@@ -1,5 +1,6 @@
 package io.jadu.pages.presentation.components
 
+import android.util.Log
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -17,6 +18,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
+import androidx.paging.LOG_TAG
 import io.jadu.pages.core.PreferencesManager
 import io.jadu.pages.presentation.viewmodel.NotesViewModel
 import io.jadu.pages.ui.theme.White
@@ -82,7 +84,7 @@ fun HomeTopAppBar(
                     IconButton(onClick = {
                         isSearchMode = false
                         searchText = ""
-                        onSearchTextChange("") // Clear search text in HomePage
+                        onSearchTextChange("")
                     }) {
                         Icon(imageVector = Icons.Filled.Close, contentDescription = "Close Search")
                     }

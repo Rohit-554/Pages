@@ -1,6 +1,7 @@
 package io.jadu.pages.presentation.screens
 
 import android.net.Uri
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
@@ -107,8 +108,7 @@ fun HomePage(
     val isDeletePressed = remember { mutableStateOf(false) }
     val pagingNotes = viewModel.notesFlow.collectAsLazyPagingItems()
     //val notes = pagingNotes.itemSnapshotList.items
-    val isSearchedClicked  = remember { mutableStateOf(false) }
-    val searchText by viewModel.searchText.collectAsState()
+    val isSearchedClicked = remember { mutableStateOf(false) }
     val isSearching by viewModel.isSearching.collectAsState()
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.sleepingbear))
     val lottieComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.bear))
@@ -236,7 +236,7 @@ fun HomePage(
                     )
                 }
 
-                if(isDeletePressed.value){
+                if (isDeletePressed.value) {
                     CustomDialog(
                         title = "Delete Notes",
                         description = "Are you sure you want to delete the selected notes?",
@@ -245,7 +245,8 @@ fun HomePage(
                             isDeletePressed.value = false
                             multipleSelectedForDelete = false
                             deleteSelectedNotes()
-                            Toast.makeText(context, "Deleted Successfully", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Deleted Successfully", Toast.LENGTH_SHORT)
+                                .show()
                         }
                     )
                 }
@@ -262,146 +263,144 @@ fun HomePage(
                 FloatingActionMenu(isMenuExpanded, navHostController) { isMenuExpanded = false }
             }
         }
-        if(isSearching){
+        if (isSearching) {
+            Log.d("isSearchingxx", "isSearching: $isSearching")
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator()
             }
-        }else {
-            if (isLoading) {
-                // Show shimmer effect
-                LazyVerticalStaggeredGrid(
-                    columns = StaggeredGridCells.Fixed(2),
-                    modifier = Modifier.fillMaxSize(),
-                    verticalItemSpacing = 8.dp,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(6) { // Adjust the number of shimmer placeholders
-                        ShimmerPlaceholderCard()
-                    }
-                }
-            }else{
-                Column(
-                    modifier = Modifier
-                        .padding(innerPadding)
-                        .padding(start = 16.dp, end = 16.dp, top = 8.dp),
-                ) {
-                    if (notes.isNotEmpty()) {
-                        val pinnedNotes = notes.filter { it.isPinned }
-                        val unpinnedNotes = notes.filter { !it.isPinned }
-                        LazyVerticalStaggeredGrid(
-                            columns = StaggeredGridCells.Fixed(2),
-                            state = lazyStaggeredGridState,
-                            modifier = Modifier.fillMaxSize(),
-                            verticalItemSpacing = 8.dp,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            if (pinnedNotes.isNotEmpty()) {
-                                itemsIndexed(pinnedNotes) { index, note ->
-                                    ShowNotes(
-                                        note,
-                                        navHostController,
-                                        selectedNotes,
-                                        multipleSelectedForDelete,
-                                        viewModel
-                                    )
-                                }
+        } else {
+            Column(
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .padding(start = 16.dp, end = 16.dp, top = 8.dp),
+            ) {
+                if (notes.isNotEmpty()) {
+                    val pinnedNotes = notes.filter { it.isPinned }
+                    val unpinnedNotes = notes.filter { !it.isPinned }
+                    LazyVerticalStaggeredGrid(
+                        columns = StaggeredGridCells.Fixed(2),
+                        state = lazyStaggeredGridState,
+                        modifier = Modifier.fillMaxSize(),
+                        verticalItemSpacing = 8.dp,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        if (pinnedNotes.isNotEmpty()) {
+                            itemsIndexed(pinnedNotes) { index, note ->
+                                ShowNotes(
+                                    note,
+                                    navHostController,
+                                    selectedNotes,
+                                    multipleSelectedForDelete,
+                                    viewModel
+                                )
                             }
-                            if (unpinnedNotes.isNotEmpty()) {
-                                itemsIndexed(unpinnedNotes) { index, note ->
-                                    ShowNotes(
-                                        note,
-                                        navHostController,
-                                        selectedNotes,
-                                        multipleSelectedForDelete,
-                                        viewModel
-                                    )
-                                }
+                        }
+                        if (unpinnedNotes.isNotEmpty()) {
+                            itemsIndexed(unpinnedNotes) { index, note ->
+                                ShowNotes(
+                                    note,
+                                    navHostController,
+                                    selectedNotes,
+                                    multipleSelectedForDelete,
+                                    viewModel
+                                )
                             }
-                            if (selectedNotes.isNotEmpty()) {
-                                item {
-                                    Column(
-                                        Modifier.fillMaxSize(),
-                                        verticalArrangement = Arrangement.Center,
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    ) {
-
-                                    }
+                        }
+                        if (selectedNotes.isNotEmpty()) {
+                            item {
+                                Column(
+                                    Modifier.fillMaxSize(),
+                                    verticalArrangement = Arrangement.Center,
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
 
                                 }
+
                             }
+                        }
 
-                            pagingNotes.apply {
-                                when {
-                                    loadState.refresh is LoadState.Loading -> {
-                                        item {
-                                            CircularProgressIndicator(
-                                                modifier = Modifier.fillMaxWidth().padding(16.dp)
-                                            )
-                                        }
+                        pagingNotes.apply {
+                            when {
+                                loadState.refresh is LoadState.Loading -> {
+                                    item {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(16.dp)
+                                        )
                                     }
+                                }
 
-                                    loadState.append is LoadState.Loading -> {
-                                        item {
-                                            CircularProgressIndicator(
-                                                modifier = Modifier.fillMaxWidth().padding(16.dp)
-                                            )
-                                        }
+                                loadState.append is LoadState.Loading -> {
+                                    item {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(16.dp)
+                                        )
                                     }
+                                }
 
-                                    loadState.append is LoadState.Error -> {
-                                        item {
-                                            Text(
-                                                text = "Error loading more notes. Please try again.",
-                                                modifier = Modifier.fillMaxWidth().padding(16.dp)
-                                            )
-                                        }
+                                loadState.append is LoadState.Error -> {
+                                    item {
+                                        Text(
+                                            text = "Error loading more notes. Please try again.",
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(16.dp)
+                                        )
                                     }
                                 }
                             }
                         }
-                    } else {
-                        Column(
-                            Modifier.fillMaxSize().wrapContentHeight(),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            if(isBearTouched){
-                                LottieAnimation(
-                                    lottieComposition,
-                                    isPlaying = true,
-                                    iterations = LottieConstants.IterateForever,
-                                    modifier = Modifier
-                                        .size(250.dp)
-                                        .clickable {
-                                            isBearTouched = false
-                                        }
-                                )
-                                LottieSection(
-                                    text1 = "I warned you !",
-                                    text2 = "Now, Touch him again to make him sleep"
-                                )
-                            }else{
-                                LottieAnimation(
-                                    composition,
-                                    isPlaying = true,
-                                    iterations = LottieConstants.IterateForever,
-                                    modifier = Modifier.size(300.dp).clickable {
+                    }
+                } else {
+                    Column(
+                        Modifier
+                            .fillMaxSize()
+                            .wrapContentHeight(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        if (isBearTouched) {
+                            LottieAnimation(
+                                lottieComposition,
+                                isPlaying = true,
+                                iterations = LottieConstants.IterateForever,
+                                modifier = Modifier
+                                    .size(250.dp)
+                                    .clickable {
+                                        isBearTouched = false
+                                    }
+                            )
+                            LottieSection(
+                                text1 = "I warned you !",
+                                text2 = "Now, Touch him again to make him sleep"
+                            )
+                        } else {
+                            LottieAnimation(
+                                composition,
+                                isPlaying = true,
+                                iterations = LottieConstants.IterateForever,
+                                modifier = Modifier
+                                    .size(300.dp)
+                                    .clickable {
                                         isBearTouched = true
                                     }
-                                )
-                                LottieSection(
-                                    text1 = "Nothing found here!",
-                                    text2 = "& Beware of Bear! don't touch him"
-                                )
-                            }
+                            )
+                            LottieSection(
+                                text1 = "Nothing found here!",
+                                text2 = "& Beware of Bear! don't touch him"
+                            )
                         }
                     }
-
                 }
+
             }
+
         }
     }
 
@@ -425,8 +424,8 @@ fun HomePage(
 
 @Composable
 private fun LottieSection(
-    text1:String,
-    text2:String
+    text1: String,
+    text2: String
 ) {
     Spacer(modifier = Modifier.height(8.dp))
     Text(

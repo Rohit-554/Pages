@@ -44,23 +44,9 @@ class NotesViewModel @Inject constructor(
     /* init {
          getNotesPaginated(10, 0)
      }*/
-
     private var currentOffset = 0 // Tracks the current offset
     private val limit = 10
     private val _notes = MutableStateFlow<List<Notes>>(emptyList())
-    val notes = searchText
-        .combine(_notes) { searchText, notes ->
-            if (searchText.isBlank()) {
-                notes
-            } else {
-                notes.filter { it.doesMatchSearchQuery(searchText) }
-            }
-        }
-        .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5000),
-            _notes.value
-        )
 
 
     private val _updatedNotes = MutableStateFlow<List<Notes>>(emptyList())
@@ -84,7 +70,8 @@ class NotesViewModel @Inject constructor(
         .combine(searchText) { pagingData, searchText ->
             if (searchText.isBlank()) {
                 pagingData
-            } else {
+            }
+            else {
                 pagingData.filter { it.doesMatchSearchQuery(searchText) }
             }
         }
