@@ -10,6 +10,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import io.jadu.pages.presentation.screens.ParentComposable
 import io.jadu.pages.presentation.viewmodel.TodoViewModel
 import io.jadu.pages.ui.theme.PagesTheme
+import io.jadu.pages.ui.theme.PagesThemeDarkLight
 
 @AndroidEntryPoint
 class TodoActivity:ComponentActivity() {
@@ -20,7 +21,7 @@ class TodoActivity:ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val todoViewModel: TodoViewModel = hiltViewModel()
-            PagesTheme {
+            PagesThemeDarkLight   {
                 ParentComposable(todoViewModel)
             }
         }

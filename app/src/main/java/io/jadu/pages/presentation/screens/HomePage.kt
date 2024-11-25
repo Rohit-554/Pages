@@ -70,6 +70,7 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import io.jadu.pages.R
+import io.jadu.pages.core.noRippleClickable
 import io.jadu.pages.domain.model.Notes
 import io.jadu.pages.presentation.components.CustomDialog
 import io.jadu.pages.presentation.components.CustomFab
@@ -374,10 +375,7 @@ fun HomePage(
                                 iterations = LottieConstants.IterateForever,
                                 modifier = Modifier
                                     .size(250.dp)
-                                    .clickable(
-                                        indication = null,
-                                        interactionSource = interactionSource
-                                    ) {
+                                    .noRippleClickable {
                                         isBearTouched = false
                                     }
                             )
@@ -392,10 +390,7 @@ fun HomePage(
                                 iterations = LottieConstants.IterateForever,
                                 modifier = Modifier
                                     .size(300.dp)
-                                    .clickable(
-                                        indication = null,
-                                        interactionSource = interactionSource
-                                    ) {
+                                    .noRippleClickable {
                                         isBearTouched = true
                                     }
                             )

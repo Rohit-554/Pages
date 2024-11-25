@@ -109,7 +109,17 @@ fun AddTodoBottomSheet(
                         newTodoText = it
                         addedText(it)
                     },
-                    label = { Text("TODO") },
+                    label = {
+                        Text(
+                            "TODO",
+                            style = TextStyle(
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontFamily = MaterialTheme.typography.bodyLarge.fontFamily,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            )
+                        )
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .focusRequester(focusRequester),

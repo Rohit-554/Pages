@@ -4,6 +4,10 @@ package io.jadu.pages.core
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Canvas
@@ -13,6 +17,7 @@ import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.PaintingStyle
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asAndroidPath
+import androidx.compose.ui.platform.debugInspectorInfo
 import androidx.core.content.FileProvider
 import io.jadu.pages.domain.model.PathProperties
 import java.io.File
@@ -110,6 +115,7 @@ class Utils {
             null
         }
     }
+
 }
 
 fun Path.translated(offset: Offset): Path {
