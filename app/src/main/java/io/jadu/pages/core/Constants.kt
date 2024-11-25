@@ -6,4 +6,5 @@ object Constants{
     val MY_PREFS_NAME = "MyPrefsFile"
     val GET_IMAGE = "GET_IMAGE"
     val STARTING_KEY = 0
+    val EMAIL = ""
 }

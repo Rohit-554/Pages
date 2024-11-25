@@ -71,12 +71,14 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.rememberAsyncImagePainter
+import io.jadu.pages.BuildConfig
 import io.jadu.pages.R
 import io.jadu.pages.core.Constants
 import io.jadu.pages.core.PreferencesManager
 import io.jadu.pages.presentation.components.CustomTopAppBar
 import io.jadu.pages.presentation.components.InfoCard
 import io.jadu.pages.presentation.components.TextFieldDialogue
+import io.jadu.pages.presentation.components.sendEmail
 import io.jadu.pages.presentation.navigation.NavigationItem
 import io.jadu.pages.presentation.viewmodel.NotesViewModel
 import io.jadu.pages.presentation.viewmodel.TodoViewModel
@@ -116,7 +118,9 @@ fun SettingsPage(
     val noteSize = notes.size
     val totalPinnedNotes = notes.filter { it.isPinned }.size
     var showDialog by remember { mutableStateOf(false) }
-    val todoSize = todoViewModel.getAllTodo.collectAsState(initial = emptyList()).value.filter { !it.isTaskCompleted }.size
+    val todoSize =
+        todoViewModel.getAllTodo.collectAsState(initial = emptyList()).value.filter { !it.isTaskCompleted }.size
+    val isFeedback = remember { mutableStateOf(false) }
 
     LaunchedEffect(isEditing) {
         if (isEditing) {
@@ -282,9 +286,13 @@ fun SettingsPage(
                                     )
                                 }
                                 isUploadPhotoClicked = false
-                            }else if (!isEditing && isUploadPhotoClicked) {
+                            } else if (!isEditing && isUploadPhotoClicked) {
                                 isUploadPhotoClicked = false
-                                Toast.makeText(context, "Click on Edit icon and tap the image to update", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    context,
+                                    "Click on Edit icon and tap the image to update",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
 
 
@@ -385,7 +393,7 @@ fun SettingsPage(
                                     horizontalArrangement = Arrangement.Center,
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    if(name.isEmpty()){
+                                    if (name.isEmpty()) {
                                         Text(
                                             text = "Edit Your Name and Photo",
                                             style = MaterialTheme.typography.bodyLarge,
@@ -394,7 +402,7 @@ fun SettingsPage(
                                             fontStyle = FontStyle.Italic,
                                             color = MaterialTheme.colorScheme.onSurface,
                                         )
-                                    }else{
+                                    } else {
                                         Text(
                                             text = name,
                                             style = MaterialTheme.typography.bodyLarge,
@@ -459,7 +467,11 @@ fun SettingsPage(
                                         modifier = Modifier
                                             .fillMaxHeight()
                                             .width(1.dp)
-                                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
+                                            .background(
+                                                MaterialTheme.colorScheme.onSurface.copy(
+                                                    alpha = 0.2f
+                                                )
+                                            )
                                     )
 
                                     // Container for the second InfoCard
@@ -486,22 +498,30 @@ fun SettingsPage(
                         BorderButton(
                             navHostController,
                             "FeedBack",
-                            onClick = {},
+                            onClick = {
+                                showDialog = true
+                                isFeedback.value = true
+                            },
                             subtitle = "Give us your valuable feedback"
                         )
-                        BorderButton(navHostController, "Report A Bug", onClick = {
-                                showDialog = true
+                        BorderButton(navHostController, "Report A Bug",
+                            onClick = {
+                            showDialog = true
+                            isFeedback.value = false
                         }, subtitle = "Report any bugs you find")
                     }
                 }
             }
         }
 
-        if(showDialog){
+        if (showDialog) {
             TextFieldDialogue(
-                onDismissRequest = { showDialog = false },
+                onDismissRequest = {
+                    showDialog = false
+                },
                 onSubmit = { bugDescription ->
-                }
+                },
+                isFeedbackClicked = isFeedback.value
             )
         }
     }

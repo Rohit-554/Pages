@@ -31,6 +31,7 @@ import androidx.compose.material3.Scaffold
 import androidx.navigation.NavHostController
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -125,11 +126,7 @@ fun AppNavHost(
     val pagingNotes = viewModel.notesFlow.collectAsLazyPagingItems()
     val notes = pagingNotes.itemSnapshotList.items
 
-    /*LaunchedEffect(shouldOpenTodoPage) {
-        if(shouldOpenTodoPage){
-            NavigationItem.createTodo.route
-        }
-    }*/
+
     NavHost(
         modifier = Modifier,
         navController = navHostController,
@@ -187,7 +184,7 @@ fun AppNavHost(
         }
 
         composable(NavigationItem.Home2.route) {
-            HomePage(viewModel, navHostController, onCardSelected = {}, notes = notes)
+            HomePage(viewModel, navHostController, onCardSelected = {}, note = notes)
         }
 
         composable(NavigationItem.IntroScreenOne.route){

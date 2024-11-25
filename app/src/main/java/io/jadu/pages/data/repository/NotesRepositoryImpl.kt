@@ -46,4 +46,8 @@ class NotesRepositoryImpl @Inject constructor(
         return notesDao.searchNotes(searchText)
     }
 
+    override fun getNotes(): Flow<List<Notes>> {
+        return notesDao.getNotes()
+    }
+
 }

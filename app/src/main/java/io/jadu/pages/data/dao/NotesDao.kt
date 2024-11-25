@@ -19,6 +19,8 @@ interface NotesDao {
     @Query("SELECT * FROM notes ORDER BY position ASC")
     fun getNotesPaginated(): PagingSource<Int, Notes>
 
+    @Query("SELECT * FROM notes")
+    fun getNotes(): Flow<List<Notes>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun addNotes(note: Notes)
@@ -42,5 +44,7 @@ interface NotesDao {
 
     @Query("SELECT * FROM notes WHERE title LIKE '%' || :searchText || '%' OR description LIKE '%' || :searchText || '%'")
     fun searchNotes(searchText: String): Flow<List<Notes>>
+
+
 
 }

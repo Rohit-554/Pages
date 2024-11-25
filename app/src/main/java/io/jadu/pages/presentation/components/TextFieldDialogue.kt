@@ -16,6 +16,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.EmojiEmotions
+import androidx.compose.material.icons.filled.Feedback
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -36,6 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import io.jadu.pages.BuildConfig
 import papaya.`in`.sendmail.SendMail
 
 
@@ -44,11 +47,12 @@ import papaya.`in`.sendmail.SendMail
 @Composable
 fun TextFieldDialogue(
     onDismissRequest: () -> Unit,
-    onSubmit: (String) -> Unit
+    onSubmit: (String) -> Unit,
+    isFeedbackClicked:Boolean = false
 ) {
     var bugDescription by remember { mutableStateOf("") }
     var title by remember { mutableStateOf("") }
-    val email by remember { mutableStateOf("strawboxstudios@gmail.com") }
+    val email by remember { mutableStateOf(BuildConfig.EMAIL) }
     val context = androidx.compose.ui.platform.LocalContext.current
     Dialog(onDismissRequest = onDismissRequest) {
         Surface(
@@ -62,24 +66,46 @@ fun TextFieldDialogue(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Row {
-                    Text(
-                        text = "Report a Bug",
-                        style = TextStyle(
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = MaterialTheme.typography.bodyLarge.fontFamily,
+                if(!isFeedbackClicked){
+                    Row {
+                        Text(
+                            text = "Report a Bug",
+                            style = TextStyle(
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = MaterialTheme.typography.bodyLarge.fontFamily,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontSize = 20.sp
+                            ),
                             color = MaterialTheme.colorScheme.onSurface,
                             fontSize = 20.sp
-                        ),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 20.sp
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Icon(
-                        imageVector = Icons.Default.BugReport,
-                        contentDescription = "Bug Report",
-                    )
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Icon(
+                            imageVector = Icons.Default.BugReport,
+                            contentDescription = "Bug Report",
+                        )
+                    }
+                }else{
+                    Row {
+                        Text(
+                            text = "Feedback",
+                            style = TextStyle(
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = MaterialTheme.typography.bodyLarge.fontFamily,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontSize = 20.sp
+                            ),
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 20.sp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Icon(
+                            imageVector = Icons.Default.EmojiEmotions,
+                            contentDescription = "Bug Report",
+                        )
+                    }
                 }
+
 
 
                 //createa a OutlinedTextField for the title

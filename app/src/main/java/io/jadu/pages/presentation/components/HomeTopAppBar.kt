@@ -80,7 +80,7 @@ fun HomeTopAppBar(
         },
         actions = {
             if (isHome) {
-                if (isSearchMode) {
+               /* if (isSearchMode) {
                     IconButton(onClick = {
                         isSearchMode = false
                         searchText = ""
@@ -95,9 +95,10 @@ fun HomeTopAppBar(
                     }) {
                         Icon(imageVector = Icons.Filled.Search, contentDescription = "Search")
                     }
-                    IconButton(onClick = onMenuClick) {
-                        Icon(imageVector = Icons.Filled.Settings, contentDescription = "Menu")
-                    }
+
+                }*/
+                IconButton(onClick = onMenuClick) {
+                    Icon(imageVector = Icons.Filled.Settings, contentDescription = "Menu")
                 }
             }
         },

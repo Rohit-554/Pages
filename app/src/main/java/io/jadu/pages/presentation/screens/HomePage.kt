@@ -7,6 +7,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -89,10 +90,10 @@ fun HomePage(
     viewModel: NotesViewModel,
     navHostController: NavHostController,
     onCardSelected: (Boolean) -> Unit,
-    notes: List<Notes>,
+    note: List<Notes>,
 ) {
     val context = LocalContext.current
-   // val notes = viewModel.notes.collectAsState(initial = emptyList()).value
+    // val notes = viewModel.notes.collectAsState(initial = emptyList()).value
     val lazyStaggeredGridState = rememberLazyStaggeredGridState()
     var offset by remember { mutableIntStateOf(0) }
     val limit = 15
@@ -107,18 +108,19 @@ fun HomePage(
     val coroutineScope = rememberCoroutineScope()
     val isDeletePressed = remember { mutableStateOf(false) }
     val pagingNotes = viewModel.notesFlow.collectAsLazyPagingItems()
-    //val notes = pagingNotes.itemSnapshotList.items
+    val notes = pagingNotes.itemSnapshotList.items                              //todo make sure to check paging issue for searching
     val isSearchedClicked = remember { mutableStateOf(false) }
     val isSearching by viewModel.isSearching.collectAsState()
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.sleepingbear))
     val lottieComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.bear))
+    //val notes = viewModel.notes.collectAsState(initial = emptyList()).value
+    val interactionSource = remember { MutableInteractionSource() } // Prevent any visual feedback
+
     LaunchedEffect(selectedNotes) {
         onCardSelected(selectedNotes.isNotEmpty())
         multipleSelectedForDelete = selectedNotes.isNotEmpty()
     }
     var isBearTouched by remember { mutableStateOf(false) }
-
-
 
     LaunchedEffect(Unit) {
         delay(2000)
@@ -372,7 +374,10 @@ fun HomePage(
                                 iterations = LottieConstants.IterateForever,
                                 modifier = Modifier
                                     .size(250.dp)
-                                    .clickable {
+                                    .clickable(
+                                        indication = null,
+                                        interactionSource = interactionSource
+                                    ) {
                                         isBearTouched = false
                                     }
                             )
@@ -387,7 +392,10 @@ fun HomePage(
                                 iterations = LottieConstants.IterateForever,
                                 modifier = Modifier
                                     .size(300.dp)
-                                    .clickable {
+                                    .clickable(
+                                        indication = null,
+                                        interactionSource = interactionSource
+                                    ) {
                                         isBearTouched = true
                                     }
                             )
@@ -398,9 +406,7 @@ fun HomePage(
                         }
                     }
                 }
-
             }
-
         }
     }
 
