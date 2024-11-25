@@ -1,10 +1,11 @@
 package io.jadu.pages.presentation.components
 
-import android.util.Log
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -18,9 +19,10 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
-import androidx.paging.LOG_TAG
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import io.jadu.pages.core.PreferencesManager
-import io.jadu.pages.presentation.viewmodel.NotesViewModel
 import io.jadu.pages.ui.theme.White
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,6 +33,7 @@ fun HomeTopAppBar(
     onSearchTextChange: (String) -> Unit,
     title: String = "Hi Rohit!",
     isHome: Boolean = true,
+    scrollBehavior: TopAppBarScrollBehavior,
 ) {
     var isSearchMode by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
@@ -38,13 +41,12 @@ fun HomeTopAppBar(
     val context = LocalContext.current
     val preferencesManager = remember { PreferencesManager(context) }
     val name by remember { mutableStateOf(preferencesManager.getName() ?: "") }
-
     LaunchedEffect(isSearchMode) {
         if (isSearchMode) {
             focusRequester.requestFocus()
         }
     }
-    TopAppBar(
+    MediumTopAppBar(
         title = {
             if (isSearchMode) {
                 TextField(
@@ -69,16 +71,39 @@ fun HomeTopAppBar(
                     )
                 )
             } else {
-                Text(
-                    text = if(name.isNotEmpty()) "Hey, $name!" else "Hey, Toby Doodle!",
-                    style = TextStyle(
-                        fontFamily = MaterialTheme.typography.bodyLarge.fontFamily,
-                        fontSize = MaterialTheme.typography.titleLarge.fontSize
+                if(isHome){
+                    Text(
+                        modifier = Modifier.fillMaxWidth(0.7f),
+                        text = if (name.isNotEmpty()) "Hey, $name!" else "Hey, Toby Doodle!",
+                        style = TextStyle(
+                            fontFamily = MaterialTheme.typography.bodyLarge.fontFamily,
+                            fontSize = MaterialTheme.typography.headlineMedium.fontSize,
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+
                     )
-                )
+                }else{
+                    Text(
+                        modifier = Modifier.fillMaxWidth(0.7f),
+                        text = "TO-DOs",
+                        style = TextStyle(
+                            fontFamily = MaterialTheme.typography.bodyLarge.fontFamily,
+                            fontSize = MaterialTheme.typography.headlineMedium.fontSize,
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+
+                    )
+                }
+
+
             }
         },
         actions = {
+            IconButton(onClick = onMenuClick) {
+                Icon(imageVector = Icons.Filled.Settings, contentDescription = "Menu")
+            }
             if (isHome) {
                /* if (isSearchMode) {
                     IconButton(onClick = {
@@ -97,11 +122,10 @@ fun HomeTopAppBar(
                     }
 
                 }*/
-                IconButton(onClick = onMenuClick) {
-                    Icon(imageVector = Icons.Filled.Settings, contentDescription = "Menu")
-                }
+
             }
         },
+        scrollBehavior = scrollBehavior
     )
 }
 

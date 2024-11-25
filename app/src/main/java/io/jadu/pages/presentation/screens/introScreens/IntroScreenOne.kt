@@ -46,6 +46,7 @@ fun IntroScreenOne(pagerState: PagerState) {
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.story))
 
     Scaffold { paddingValues ->
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -62,9 +63,10 @@ fun IntroScreenOne(pagerState: PagerState) {
                 LottieAnimation(
                     composition,
                     isPlaying = true,
-                    iterations = LottieConstants.IterateForever
+                    iterations = LottieConstants.IterateForever,
+                    modifier = Modifier.size(400.dp)
                 )
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "Welcome to Pages",
                     fontSize = 24.sp,
@@ -97,8 +99,8 @@ fun IntroScreenOne(pagerState: PagerState) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.NavigateNext,
                     contentDescription = "Next",
-                    modifier = Modifier.size(56.dp).background(MaterialTheme.colorScheme.onBackground, CircleShape),
-                    tint = Black
+                    modifier = Modifier.size(56.dp).background(MaterialTheme.colorScheme.onSurface, CircleShape),
+                    tint = MaterialTheme.colorScheme.surface
                 )
             }
         }
@@ -108,8 +110,8 @@ fun IntroScreenOne(pagerState: PagerState) {
 
 
 
-/*@Preview
+@Preview
 @Composable
 fun IntroScreenOnePreview() {
-    IntroScreenOne(rememberPagerState { 3 }, composition)
-}*/
+    IntroScreenOne(rememberPagerState { 3 })
+}

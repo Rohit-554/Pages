@@ -41,6 +41,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -56,6 +58,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -64,7 +67,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
-import com.airbnb.lottie.LottieComposition
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
@@ -76,7 +78,6 @@ import io.jadu.pages.presentation.components.CustomDialog
 import io.jadu.pages.presentation.components.CustomFab
 import io.jadu.pages.presentation.components.HomeTopAppBar
 import io.jadu.pages.presentation.components.NoteCard
-import io.jadu.pages.presentation.components.ShimmerPlaceholderCard
 import io.jadu.pages.presentation.navigation.NavigationItem
 import io.jadu.pages.presentation.viewmodel.NotesViewModel
 import io.jadu.pages.ui.theme.ButtonBlue
@@ -114,9 +115,7 @@ fun HomePage(
     val isSearching by viewModel.isSearching.collectAsState()
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.sleepingbear))
     val lottieComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.bear))
-    //val notes = viewModel.notes.collectAsState(initial = emptyList()).value
-    val interactionSource = remember { MutableInteractionSource() } // Prevent any visual feedback
-
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     LaunchedEffect(selectedNotes) {
         onCardSelected(selectedNotes.isNotEmpty())
         multipleSelectedForDelete = selectedNotes.isNotEmpty()
@@ -138,6 +137,7 @@ fun HomePage(
     }
 
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             if (selectedNotes.isNotEmpty()) {
                 TopAppBar(
@@ -183,6 +183,7 @@ fun HomePage(
                     onSearchTextChange = { searchText ->
                         viewModel.onSearchTextChanged(searchText)
                     },
+                    scrollBehavior = scrollBehavior,
                 )
             }
         },

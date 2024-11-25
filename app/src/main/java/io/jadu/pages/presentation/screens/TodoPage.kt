@@ -1,7 +1,6 @@
 package io.jadu.pages.presentation.screens
 
 import android.content.Context
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -40,11 +39,12 @@ import androidx.compose.material3.RadioButtonColors
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -53,9 +53,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.findRootCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
@@ -64,7 +66,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -85,6 +86,7 @@ import io.jadu.pages.presentation.components.CustomDialog
 import io.jadu.pages.presentation.components.CustomFab
 import io.jadu.pages.presentation.components.HomeTopAppBar
 import io.jadu.pages.presentation.home_widget.TodoWidgetWorker
+import io.jadu.pages.presentation.navigation.NavigationItem
 import io.jadu.pages.presentation.viewmodel.TodoViewModel
 import io.jadu.pages.ui.theme.ButtonBlue
 import io.jadu.pages.ui.theme.LightGray
@@ -112,6 +114,7 @@ fun TodoPage(
     val keyboardController = LocalSoftwareKeyboardController.current
     var backPressHandled by remember { mutableStateOf(false) }
     val lottieComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.bear2))
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     LaunchedEffect(bottomSheetState) {
         if(!bottomSheetState.isVisible){
             keyboardController?.hide()
@@ -156,16 +159,18 @@ fun TodoPage(
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
+            .nestedScroll(scrollBehavior.nestedScrollConnection)
             .positionAwareImePadding(),
         topBar = {
             HomeTopAppBar(
                 onSearchClick = {},
                 onMenuClick = {
-
+                    navHostController.navigate(NavigationItem.SettingsPage.route)
                 },
                 onSearchTextChange = { searchText -> },
                 title = "To-dos",
                 isHome = false,
+                scrollBehavior = scrollBehavior
             )
         },
         contentWindowInsets = WindowInsets(
@@ -248,7 +253,7 @@ fun TodoPage(
                                 style = TextStyle(
                                     fontFamily = MaterialTheme.typography.bodyLarge.fontFamily,
                                     color = Color.White,
-                                    fontSize = 20.sp,
+                                    fontSize = 16.sp,
                                     fontWeight = FontWeight.Normal
                                 ),
                                 modifier = Modifier.padding(
@@ -467,22 +472,22 @@ fun TodoListItem(
 ) {
     var isDeleteClicked by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val defaultBackgroundColor = MaterialTheme.colorScheme.background
+    val activeItemColor = MaterialTheme.colorScheme.surfaceBright
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 2.dp, horizontal = 8.dp)
             .clickable {
                 onClick()
-            },
-        color = MaterialTheme.colorScheme.surfaceBright,
+            }
+            .alpha(if (isTaskCompleted) 0.5f else 1f), // Adjust opacity if completed
+        color = if (isTaskCompleted) defaultBackgroundColor else activeItemColor,
         shape = RoundedCornerShape(12.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable {
-                    onClick()
-                }
                 .padding(4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -501,9 +506,8 @@ fun TodoListItem(
                 modifier = Modifier.fillMaxWidth(0.8f),
                 text = todoText,
                 color = Color.White,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium,
-                textDecoration = if (isTaskCompleted) TextDecoration.LineThrough else TextDecoration.None // Line through if completed
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium
             )
             Spacer(modifier = Modifier.weight(1f))
             Icon(
@@ -535,6 +539,7 @@ fun TodoListItem(
         }
     }
 }
+
 
 fun enqueueWidgetUpdateTask(context: Context) {
     WorkManager.getInstance(context).enqueue(
