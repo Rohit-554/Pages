@@ -10,20 +10,27 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.filter
+import androidx.paging.map
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.jadu.pages.domain.model.Notes
 import io.jadu.pages.domain.model.PathProperties
 import io.jadu.pages.domain.usecase.AddNoteUseCase
 import io.jadu.pages.domain.usecase.DeleteNotesUseCase
+import io.jadu.pages.domain.usecase.GetAllNotesUseCase
 import io.jadu.pages.domain.usecase.GetNotesPaginatedUseCase
 import io.jadu.pages.domain.usecase.SearchNoteUseCase
 import io.jadu.pages.domain.usecase.UpdateNotesPositionUseCase
 import io.jadu.pages.domain.usecase.UpdateNotesUseCase
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -38,29 +45,17 @@ class NotesViewModel @Inject constructor(
     private val deleteNotesUseCase: DeleteNotesUseCase,
     private val getNotesPaginatedUseCase: GetNotesPaginatedUseCase,
     private val updateNotesPositionUseCase: UpdateNotesPositionUseCase,
-    private val searchNotesUseCase: SearchNoteUseCase
+    private val searchNotesUseCase: SearchNoteUseCase,
+    private val getAllNotesUseCase: GetAllNotesUseCase
 ) : ViewModel() {
 
     /* init {
          getNotesPaginated(10, 0)
      }*/
-
     private var currentOffset = 0 // Tracks the current offset
     private val limit = 10
     private val _notes = MutableStateFlow<List<Notes>>(emptyList())
-    val notes = searchText
-        .combine(_notes) { searchText, notes ->
-            if (searchText.isBlank()) {
-                notes
-            } else {
-                notes.filter { it.doesMatchSearchQuery(searchText) }
-            }
-        }
-        .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5000),
-            _notes.value
-        )
+
 
 
     private val _updatedNotes = MutableStateFlow<List<Notes>>(emptyList())
@@ -78,17 +73,41 @@ class NotesViewModel @Inject constructor(
     private val _notesState = MutableStateFlow(NotesState())
     val notesState: StateFlow<NotesState> get() = _notesState
 
-    val notesFlow: Flow<PagingData<Notes>> = getNotesPaginatedUseCase()
-        .cachedIn(viewModelScope)
+
+
+    val notes: Flow<List<Notes>>  = getAllNotesUseCase()
         .onEach { _isSearching.update { true } }
-        .combine(searchText) { pagingData, searchText ->
+        .combine(searchText) { notes, searchText ->
             if (searchText.isBlank()) {
-                pagingData
-            } else {
-                pagingData.filter { it.doesMatchSearchQuery(searchText) }
+                notes
+            }
+            else {
+                Log.d("SearchTextyuu", "SearchText: $notes")
+                notes.filter { it.doesMatchSearchQuery(searchText) }
             }
         }
         .onEach { _isSearching.update { false } }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    val notesFlow: Flow<PagingData<Notes>> = searchText
+        .debounce(300) // Debounce for smoother search experience
+        .distinctUntilChanged() // Avoid redundant recomputation for the same query
+        .flatMapLatest { searchQuery ->
+            getNotesPaginatedUseCase().map { pagingData ->
+                if (searchQuery.isBlank()) {
+                    pagingData // Return unfiltered data if the query is blank
+                } else {
+                    pagingData.filter { note ->
+                        note.doesMatchSearchQuery(searchQuery) // Filter notes client-side
+                    }
+                }
+            }
+        }
+        .cachedIn(viewModelScope)
+        .onEach { _isSearching.update { false } }
+
+
+
 
     private val _drawingPathList =
         MutableStateFlow<List<List<Pair<Path, PathProperties>>>>(emptyList())
@@ -147,25 +166,14 @@ class NotesViewModel @Inject constructor(
 
     fun deleteNotes(noteId: Long) = viewModelScope.launch {
         deleteNotesUseCase.invoke(noteId)
-        _notes.value = _notes.value.filter { it.id != noteId }
+        //_notes.value = _notes.value.filter { it.id != noteId }
     }
 
-    fun searchNotes(searchText: String) = viewModelScope.launch {
-        Log.d("SearchText", "SearchText: $searchText")
-        searchNotesUseCase.invoke(searchText).collect { newNotes ->
-            _notes.value = newNotes
-        }
-    }
 
     fun updateNotesPosition(id: Long, position: Int) = viewModelScope.launch {
         updateNotesPositionUseCase.invoke(id, position)
     }
 
-    fun swapNotes(index1: Int, index2: Int) {
-        val currentNotes = _notes.value.toMutableList()
-        Collections.swap(currentNotes, index1, index2)
-        _notes.value = currentNotes
-    }
 
     /*fun getNotesPaginated(limit: Int, offset: Int) {
         viewModelScope.launch {

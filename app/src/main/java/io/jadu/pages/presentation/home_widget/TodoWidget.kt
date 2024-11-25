@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
@@ -32,6 +33,7 @@ import androidx.glance.IconImageProvider
 import androidx.glance.Image
 import androidx.glance.ImageProvider
 import androidx.glance.action.ActionParameters
+import androidx.glance.action.NoRippleOverride
 import androidx.glance.action.actionParametersOf
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
@@ -131,21 +133,27 @@ object TodoWidget : GlanceAppWidget() {
                                 Column(
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
-                                    Image(
-                                        provider = androidx.glance.ImageProvider(R.drawable.baseline_sticky_note_2_24),
+                                    Box(
                                         modifier = GlanceModifier
-                                            .size(64.dp)
-                                            .padding(bottom = 8.dp)
+                                            .size(80.dp)
                                             .clickable(
+                                                rippleOverride = R.drawable.no_ripple,
+                                                onClick =
                                                 actionRunCallback<UpdateTodoAction>(
-                                                    actionParametersOf(
-                                                        activityId to "addTodo"
-                                                    )
+                                                    actionParametersOf(activityId to "addTodo")
                                                 )
                                             ),
-                                        contentDescription = "Add new task",
-                                        colorFilter = null
-                                    )
+                                        contentAlignment = Alignment.Center
+                                    ){
+                                        Image(
+                                            provider = androidx.glance.ImageProvider(R.drawable.baseline_sticky_note_2_24),
+                                            modifier = GlanceModifier
+                                                .size(76.dp)
+                                                .padding(bottom = 8.dp),
+                                            contentDescription = "Add new task",
+                                            colorFilter = ColorFilter.tint(GlanceTheme.colors.onSurface)
+                                        )
+                                    }
                                     Text(
                                         text = "No TO-DOs",
                                         style = TextStyle(
@@ -200,9 +208,9 @@ object TodoWidget : GlanceAppWidget() {
                                 Column {
                                     Row(
                                         modifier = GlanceModifier
-                                            .padding(bottom = 2.dp)
+                                            .padding(bottom = 6.dp, top = 6.dp)
                                             .fillMaxWidth(),
-                                        verticalAlignment = Alignment.CenterVertically
+                                        verticalAlignment = Alignment.Top
                                     ) {
                                         val todoIdKey = ActionParameters.Key<Long>("todoId")
                                         Image(
@@ -216,10 +224,11 @@ object TodoWidget : GlanceAppWidget() {
                                                 .size(24.dp)
                                                 .padding(end = 8.dp)
                                                 .clickable(
-                                                    actionRunCallback<UpdateTodoAction>(
+                                                    rippleOverride = R.drawable.no_ripple,
+                                                    onClick = actionRunCallback<UpdateTodoAction>(
                                                         actionParametersOf(todoIdKey to todo.id)
                                                     )
-                                                ),
+                                                )
                                         )
                                         Text(
                                             text = todo.task ?: "",
@@ -234,19 +243,19 @@ object TodoWidget : GlanceAppWidget() {
                                         modifier = GlanceModifier
                                             .fillMaxWidth()
                                             .height(1.dp)
+                                            .padding(top = 4.dp, bottom = 4.dp)
                                             .background(
-                                                color = Color(0xFFE0E0E0).copy(alpha = 0.5f),
+                                                color = Color(0xFFE0E0E0).copy(alpha = 0.6f),
                                             )
                                     ) {}
                                 }
+
                             }
 
                         }
                     }
                 }
-
             }
-
         }
     }
 
@@ -257,15 +266,24 @@ object TodoWidget : GlanceAppWidget() {
     ) {
         Box(
             modifier = GlanceModifier
-                .size(24.dp)
+                .size(30.dp)
                 .clickable(
+                    rippleOverride = R.drawable.no_ripple,
+                    onClick =
                     actionRunCallback<UpdateTodoAction>(
                         actionParametersOf(activityId to "addTodo")
                     )
                 ),
             contentAlignment = Alignment.Center
         ) {
-            Text(
+            Image(
+                provider = androidx.glance.ImageProvider(R.drawable.baseline_add_24),
+                contentDescription = "Unchecked",
+                modifier = GlanceModifier
+                    .size(24.dp),
+                colorFilter = ColorFilter.tint(GlanceTheme.colors.onSurface)
+            )
+           /* Text(
                 text = "+",
                 style = TextStyle(
                     color = MyAppWidgetGlanceColorScheme.colors.onSurface,
@@ -273,7 +291,7 @@ object TodoWidget : GlanceAppWidget() {
                     fontFamily = myCustomFontFamily,
                 ),
                 maxLines = 1
-            )
+            )*/
         }
     }
 

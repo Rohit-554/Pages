@@ -5,7 +5,6 @@ import android.Manifest.permission.READ_MEDIA_IMAGES
 import android.Manifest.permission.READ_MEDIA_VIDEO
 import android.Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED
 import android.content.Intent
-import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
 import android.widget.Toast
@@ -38,18 +37,17 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -66,24 +64,24 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.rememberAsyncImagePainter
+import io.jadu.pages.BuildConfig
 import io.jadu.pages.R
 import io.jadu.pages.core.Constants
 import io.jadu.pages.core.PreferencesManager
 import io.jadu.pages.presentation.components.CustomTopAppBar
 import io.jadu.pages.presentation.components.InfoCard
 import io.jadu.pages.presentation.components.TextFieldDialogue
+import io.jadu.pages.presentation.components.sendEmail
 import io.jadu.pages.presentation.navigation.NavigationItem
 import io.jadu.pages.presentation.viewmodel.NotesViewModel
-import io.jadu.pages.ui.theme.PagesTheme
+import io.jadu.pages.presentation.viewmodel.TodoViewModel
 import io.jadu.pages.ui.theme.TickColor
 import io.jadu.pages.ui.theme.White
 import java.text.SimpleDateFormat
@@ -92,7 +90,11 @@ import java.util.Locale
 
 
 @Composable
-fun SettingsPage(navHostController: NavHostController, viewModel: NotesViewModel) {
+fun SettingsPage(
+    navHostController: NavHostController,
+    viewModel: NotesViewModel,
+    todoViewModel: TodoViewModel
+) {
     val configuration = LocalConfiguration.current
     val screenHeightDp = configuration.screenHeightDp
     val cardHeightDp = screenHeightDp * 0.15f
@@ -116,6 +118,9 @@ fun SettingsPage(navHostController: NavHostController, viewModel: NotesViewModel
     val noteSize = notes.size
     val totalPinnedNotes = notes.filter { it.isPinned }.size
     var showDialog by remember { mutableStateOf(false) }
+    val todoSize =
+        todoViewModel.getAllTodo.collectAsState(initial = emptyList()).value.filter { !it.isTaskCompleted }.size
+    val isFeedback = remember { mutableStateOf(false) }
 
     LaunchedEffect(isEditing) {
         if (isEditing) {
@@ -281,7 +286,15 @@ fun SettingsPage(navHostController: NavHostController, viewModel: NotesViewModel
                                     )
                                 }
                                 isUploadPhotoClicked = false
+                            } else if (!isEditing && isUploadPhotoClicked) {
+                                isUploadPhotoClicked = false
+                                Toast.makeText(
+                                    context,
+                                    "Click on Edit icon and tap the image to update",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
+
 
                             if (image.isEmpty()) {
                                 if (selectedImageUri == null) {
@@ -380,7 +393,7 @@ fun SettingsPage(navHostController: NavHostController, viewModel: NotesViewModel
                                     horizontalArrangement = Arrangement.Center,
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    if(name.isEmpty()){
+                                    if (name.isEmpty()) {
                                         Text(
                                             text = "Edit Your Name and Photo",
                                             style = MaterialTheme.typography.bodyLarge,
@@ -389,7 +402,7 @@ fun SettingsPage(navHostController: NavHostController, viewModel: NotesViewModel
                                             fontStyle = FontStyle.Italic,
                                             color = MaterialTheme.colorScheme.onSurface,
                                         )
-                                    }else{
+                                    } else {
                                         Text(
                                             text = name,
                                             style = MaterialTheme.typography.bodyLarge,
@@ -454,7 +467,11 @@ fun SettingsPage(navHostController: NavHostController, viewModel: NotesViewModel
                                         modifier = Modifier
                                             .fillMaxHeight()
                                             .width(1.dp)
-                                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
+                                            .background(
+                                                MaterialTheme.colorScheme.onSurface.copy(
+                                                    alpha = 0.2f
+                                                )
+                                            )
                                     )
 
                                     // Container for the second InfoCard
@@ -465,8 +482,8 @@ fun SettingsPage(navHostController: NavHostController, viewModel: NotesViewModel
                                         contentAlignment = Alignment.Center
                                     ) {
                                         InfoCard(
-                                            title = totalPinnedNotes.toString(),
-                                            subtitle = "Pinned",
+                                            title = todoSize.toString() ?: "0",
+                                            subtitle = "TO-DOs",
                                             modifier = Modifier
                                         )
                                     }
@@ -481,22 +498,30 @@ fun SettingsPage(navHostController: NavHostController, viewModel: NotesViewModel
                         BorderButton(
                             navHostController,
                             "FeedBack",
-                            onClick = {},
+                            onClick = {
+                                showDialog = true
+                                isFeedback.value = true
+                            },
                             subtitle = "Give us your valuable feedback"
                         )
-                        BorderButton(navHostController, "Report A Bug", onClick = {
-                                showDialog = true
+                        BorderButton(navHostController, "Report A Bug",
+                            onClick = {
+                            showDialog = true
+                            isFeedback.value = false
                         }, subtitle = "Report any bugs you find")
                     }
                 }
             }
         }
 
-        if(showDialog){
+        if (showDialog) {
             TextFieldDialogue(
-                onDismissRequest = { showDialog = false },
+                onDismissRequest = {
+                    showDialog = false
+                },
                 onSubmit = { bugDescription ->
-                }
+                },
+                isFeedbackClicked = isFeedback.value
             )
         }
     }

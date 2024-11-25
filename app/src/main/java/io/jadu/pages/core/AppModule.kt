@@ -15,6 +15,7 @@ import io.jadu.pages.domain.repository.NotesRepository
 import io.jadu.pages.domain.repository.TodoRepository
 import io.jadu.pages.domain.usecase.AddNoteUseCase
 import io.jadu.pages.domain.usecase.DeleteNotesUseCase
+import io.jadu.pages.domain.usecase.GetAllNotesUseCase
 import io.jadu.pages.domain.usecase.GetNotesPaginatedUseCase
 import io.jadu.pages.domain.usecase.SearchNoteUseCase
 import io.jadu.pages.domain.usecase.UpdateNotesPositionUseCase
@@ -115,6 +116,12 @@ class AppModule {
     @Singleton
     fun provideGetAllTodosUseCase(repository: TodoRepository): GetAllTodosUseCase {
         return GetAllTodosUseCase(repository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAllNotesUseCase(repository: NotesRepository): GetAllNotesUseCase {
+        return GetAllNotesUseCase(repository)
     }
 
 
