@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material.Icon
 import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
@@ -327,10 +328,15 @@ fun TodoPage(
                             .fillMaxWidth()
                             .focusRequester(focusRequester),
                         colors = TextFieldDefaults.colors(
-                            unfocusedContainerColor = LightGray,
-                            focusedContainerColor = White,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            focusedContainerColor = MaterialTheme.colorScheme.onSurface,
                             focusedLabelColor = Color.White,
                             focusedTextColor = Color.Black,
+                            cursorColor = MaterialTheme.colorScheme.outline,
+                            selectionColors = TextSelectionColors(
+                                handleColor = MaterialTheme.colorScheme.outline,
+                                backgroundColor = MaterialTheme.colorScheme.outline
+                            )
                         )
                     )
 

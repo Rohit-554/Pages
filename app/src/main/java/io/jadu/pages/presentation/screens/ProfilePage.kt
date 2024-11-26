@@ -94,7 +94,7 @@ fun ProfilePage(paddingValues: PaddingValues, navHostController: NavHostControll
                             unfocusedContainerColor = Color.Transparent,
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent,
-                            cursorColor = Color.White
+                            cursorColor = MaterialTheme.colors.onSurface
                         )
                     )
                 }

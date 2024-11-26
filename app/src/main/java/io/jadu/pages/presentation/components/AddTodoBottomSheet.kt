@@ -99,7 +99,7 @@ fun AddTodoBottomSheet(
                         },
                         imageVector = Icons.Default.Cancel,
                         contentDescription = "Close",
-                        tint = Color.White
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
                 Spacer(modifier = Modifier.height(8.dp))

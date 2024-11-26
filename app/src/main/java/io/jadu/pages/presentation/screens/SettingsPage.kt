@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.NavigateNext
 import androidx.compose.material.icons.filled.Check
@@ -366,7 +367,11 @@ fun SettingsPage(
                                             unfocusedContainerColor = Color.Transparent,
                                             focusedIndicatorColor = Color.Transparent,
                                             unfocusedIndicatorColor = Color.Transparent,
-                                            cursorColor = Color.White
+                                            cursorColor = MaterialTheme.colorScheme.onSurface,
+                                            selectionColors = TextSelectionColors(
+                                                handleColor = MaterialTheme.colorScheme.outline,
+                                                backgroundColor = MaterialTheme.colorScheme.outline
+                                            )
                                         ),
                                         textStyle = TextStyle(
                                             fontFamily = MaterialTheme.typography.bodyLarge.fontFamily,

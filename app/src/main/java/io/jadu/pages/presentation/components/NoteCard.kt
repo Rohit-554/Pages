@@ -60,7 +60,7 @@ fun NoteCard(
 ) {
     val context = LocalContext.current
     val screenHeight = LocalConfiguration.current.screenHeightDp
-    val borderColor = if (isSelected) Color.White else Color.Transparent
+    val borderColor = if (isSelected) MaterialTheme.colorScheme.onSurface else Color.Transparent
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -125,7 +125,7 @@ fun NoteCard(
                         fontFamily = MaterialTheme.typography.bodyLarge.fontFamily,
                         fontSize = 16.sp,
                     ),
-                    color = Color.White.copy(alpha = 0.5f),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                     fontWeight = FontWeight.W600,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 4
