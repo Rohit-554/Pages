@@ -127,7 +127,6 @@ fun HomePage(
         isLoading = false
     }
 
-
     // Function to delete selected notes
     fun deleteSelectedNotes() {
         selectedNotes.forEach { note ->
