@@ -110,7 +110,7 @@ fun HomePage(
     val coroutineScope = rememberCoroutineScope()
     val isDeletePressed = remember { mutableStateOf(false) }
     val pagingNotes = viewModel.notesFlow.collectAsLazyPagingItems()
-    val notes = pagingNotes.itemSnapshotList.items                              //todo make sure to check paging issue for searching
+    val notes = pagingNotes.itemSnapshotList.items
     val isSearchedClicked = remember { mutableStateOf(false) }
     val isSearching by viewModel.isSearching.collectAsState()
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.sleepingbear))
