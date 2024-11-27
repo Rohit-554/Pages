@@ -53,6 +53,14 @@ import androidx.compose.ui.unit.Dp
 import androidx.navigation.NavHostController
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.rememberAsyncImagePainter
+import com.google.ai.client.generativeai.GenerativeModel
+import com.google.ai.client.generativeai.type.BlockThreshold
+import com.google.ai.client.generativeai.type.HarmCategory
+import com.google.ai.client.generativeai.type.SafetySetting
+import com.google.ai.client.generativeai.type.content
+import com.google.ai.client.generativeai.type.generationConfig
+import io.jadu.pages.BuildConfig
+import io.jadu.pages.core.Utils
 import io.jadu.pages.domain.model.Notes
 import io.jadu.pages.domain.model.PathProperties
 import io.jadu.pages.presentation.components.ColorPickerDialog
@@ -61,6 +69,7 @@ import io.jadu.pages.presentation.components.CustomInputFields
 import io.jadu.pages.presentation.components.CustomSnackBar
 import io.jadu.pages.presentation.components.CustomTopAppBar
 import io.jadu.pages.presentation.components.EditPageBottomAppBar
+import io.jadu.pages.presentation.components.ImagePickerDialog
 import io.jadu.pages.presentation.components.SaveFab
 import io.jadu.pages.presentation.navigation.NavigationItem
 import io.jadu.pages.presentation.screens.parseColor
@@ -102,9 +111,20 @@ fun AddNewPage(
     var shouldScrollToBottom by remember { mutableStateOf(true) }
     var isNoteDeleteClicked by remember { mutableStateOf(false) }
 
-    val imeHeight =
-        if (isKeyboardOpen) WindowInsets.Companion.ime.getBottom(LocalDensity.current) else 0
+    val imeHeight = if (isKeyboardOpen) WindowInsets.Companion.ime.getBottom(LocalDensity.current) else 0
 
+    var showImagePickerDialog by remember { mutableStateOf(false) }
+
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    val launcher = rememberLauncherForActivityResult(
+        contract =
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        Log.d("AddNewPage", "uri: $uri")
+        imageUri = uri
+    }
+
+    var isLoading by remember { mutableStateOf(false) }
 
     LaunchedEffect(notesId, notes) {
         viewModel.onSearchTextChanged("")
@@ -188,6 +208,43 @@ fun AddNewPage(
         }
     }
 
+    val model = GenerativeModel(
+        modelName = "gemini-1.5-flash-001",
+        apiKey = BuildConfig.GEMINI_KEY,
+        generationConfig = generationConfig {
+            temperature = 0.15f
+            topK = 32
+            topP = 1f
+            maxOutputTokens = 4096
+        },
+        safetySettings = listOf(
+            SafetySetting(HarmCategory.HARASSMENT, BlockThreshold.MEDIUM_AND_ABOVE),
+            SafetySetting(HarmCategory.HATE_SPEECH, BlockThreshold.MEDIUM_AND_ABOVE),
+            SafetySetting(HarmCategory.SEXUALLY_EXPLICIT, BlockThreshold.MEDIUM_AND_ABOVE),
+            SafetySetting(HarmCategory.DANGEROUS_CONTENT, BlockThreshold.MEDIUM_AND_ABOVE),
+        ),
+    )
+
+    LaunchedEffect(imageUri) {
+        if(imageUri!=null){
+            coroutineScope.launch {
+                isLoading = true
+                Log.d("AddNewPage", "response: $imageUri")
+                val response = model.generateContent(
+                    content {
+                        Utils().uriToBitmap(context, imageUri!!)?.let { image(it) }
+                        text("scan the texts in the image")
+                    }
+                )
+                Log.d("AddNewPage", "response: ${response.text}")
+                if(response.text!=null){
+                    isLoading = false
+                }
+                description = response.text?.let { TextFieldValue(it) }!!
+            }
+        }
+    }
+
 
 
     Scaffold(containerColor = if (selectedColor != Black) selectedColor else MaterialTheme.colorScheme.background,
@@ -260,7 +317,11 @@ fun AddNewPage(
                         Toast.LENGTH_SHORT
                     ).show()
                 },
-                isPinned = isPinned
+                isPinned = isPinned,
+                onScanClick = {
+                    showImagePickerDialog = true
+                    //launcher.launch("image/*")
+                }
             )
         },
         floatingActionButton = {
@@ -303,6 +364,28 @@ fun AddNewPage(
             }
         },
         content = { padding ->
+
+            if (showImagePickerDialog) {
+                ImagePickerDialog(
+                    onImagePicked = { uri ->
+                        showImagePickerDialog = false
+                        imageUri = uri
+                    }
+                )
+            }
+
+            if(isLoading){
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.5f))
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Color.White)
+                }
+            }
+
             Box(
                 modifier = Modifier
                     .padding(padding)

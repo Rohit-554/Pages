@@ -3,6 +3,7 @@ package io.jadu.pages.core
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -22,6 +23,7 @@ import androidx.core.content.FileProvider
 import io.jadu.pages.domain.model.PathProperties
 import java.io.File
 import java.io.FileOutputStream
+import java.io.InputStream
 
 class Utils {
     fun colorToHex(color: Color, includeAlpha: Boolean = false): String {
@@ -110,6 +112,18 @@ class Utils {
                 "${context.packageName}.provider", // FileProvider authority defined in the manifest
                 imageFile
             )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    fun uriToBitmap(context: Context, uri: Uri): Bitmap? {
+        return try {
+            val inputStream: InputStream? = context.contentResolver.openInputStream(uri)
+            BitmapFactory.decodeStream(inputStream).also {
+                inputStream?.close()
+            }
         } catch (e: Exception) {
             e.printStackTrace()
             null

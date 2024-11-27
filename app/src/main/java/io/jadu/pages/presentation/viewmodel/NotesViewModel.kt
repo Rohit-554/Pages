@@ -90,21 +90,22 @@ class NotesViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val notesFlow: Flow<PagingData<Notes>> = searchText
-        .debounce(300) // Debounce for smoother search experience
-        .distinctUntilChanged() // Avoid redundant recomputation for the same query
+        .debounce(300)
+        .distinctUntilChanged()
         .flatMapLatest { searchQuery ->
             getNotesPaginatedUseCase().map { pagingData ->
                 if (searchQuery.isBlank()) {
-                    pagingData // Return unfiltered data if the query is blank
+                    pagingData
                 } else {
                     pagingData.filter { note ->
-                        note.doesMatchSearchQuery(searchQuery) // Filter notes client-side
+                        note.doesMatchSearchQuery(searchQuery)
                     }
                 }
             }
         }
         .cachedIn(viewModelScope)
         .onEach { _isSearching.update { false } }
+
 
 
 

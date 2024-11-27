@@ -5,6 +5,8 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -71,7 +73,15 @@ import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
+import com.google.ai.client.generativeai.GenerativeModel
+import com.google.ai.client.generativeai.type.BlockThreshold
+import com.google.ai.client.generativeai.type.HarmCategory
+import com.google.ai.client.generativeai.type.SafetySetting
+import com.google.ai.client.generativeai.type.content
+import com.google.ai.client.generativeai.type.generationConfig
+import io.jadu.pages.BuildConfig
 import io.jadu.pages.R
+import io.jadu.pages.core.Utils
 import io.jadu.pages.core.noRippleClickable
 import io.jadu.pages.domain.model.Notes
 import io.jadu.pages.presentation.components.CustomDialog
@@ -176,6 +186,7 @@ fun HomePage(
                     onSearchClick = {
                         isSearchedClicked.value = true
                     },
+                    onScanClick = {},
                     onMenuClick = {
                         navHostController.navigate(NavigationItem.SettingsPage.route)
                     },

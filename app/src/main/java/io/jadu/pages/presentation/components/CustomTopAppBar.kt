@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.DocumentScanner
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Pin
 import androidx.compose.material.icons.filled.PushPin
@@ -47,6 +48,7 @@ fun CustomTopAppBar(
     onSaveClick: () -> Unit = {},
     onDeleteClick: () -> Unit = {},
     onPinClick : () -> Unit = {},
+    onScanClick: () -> Unit = {},
     isPinned: Boolean = false
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
@@ -72,6 +74,19 @@ fun CustomTopAppBar(
         },
         actions = {
             if (isDrawMenu) {
+                IconButton(
+                    onClick = {
+                        onScanClick()
+                    }
+                ) {
+                    Icon(
+                        imageVector =  Icons.Filled.DocumentScanner,
+                        contentDescription = "scan",
+                        modifier = Modifier.size(24.dp),
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
                 IconButton(
                     onClick = {
                         onPinClick()
