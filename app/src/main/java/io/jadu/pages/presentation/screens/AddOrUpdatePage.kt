@@ -60,6 +60,7 @@ import com.google.ai.client.generativeai.type.SafetySetting
 import com.google.ai.client.generativeai.type.content
 import com.google.ai.client.generativeai.type.generationConfig
 import io.jadu.pages.BuildConfig
+import io.jadu.pages.core.Constants
 import io.jadu.pages.core.Utils
 import io.jadu.pages.domain.model.Notes
 import io.jadu.pages.domain.model.PathProperties
@@ -209,7 +210,7 @@ fun AddNewPage(
     }
 
     val model = GenerativeModel(
-        modelName = "gemini-1.5-flash-001",
+        modelName = Constants.MODEL,
         apiKey = BuildConfig.GEMINI_KEY,
         generationConfig = generationConfig {
             temperature = 0.15f
@@ -230,17 +231,22 @@ fun AddNewPage(
             coroutineScope.launch {
                 isLoading = true
                 Log.d("AddNewPage", "response: $imageUri")
-                val response = model.generateContent(
-                    content {
-                        Utils().uriToBitmap(context, imageUri!!)?.let { image(it) }
-                        text("scan the texts in the image")
+                try{
+                    val response = model.generateContent(
+                        content {
+                            Utils().uriToBitmap(context, imageUri!!)?.let { image(it) }
+                            text("scan the texts in the image")
+                        }
+                    )
+                    Log.d("AddNewPage", "response: ${response.text}")
+                    if(response.text!=null){
+                        isLoading = false
                     }
-                )
-                Log.d("AddNewPage", "response: ${response.text}")
-                if(response.text!=null){
+                    description = response.text?.let { TextFieldValue(it) }!!
+                }catch (e: Exception) {
                     isLoading = false
+                    Toast.makeText(context, "Something went wrong", Toast.LENGTH_SHORT).show()
                 }
-                description = response.text?.let { TextFieldValue(it) }!!
             }
         }
     }
