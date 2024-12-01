@@ -2,19 +2,30 @@ package io.jadu.pages.core
 
 import android.app.Application
 import androidx.room.Room
+import com.google.ai.client.generativeai.GenerativeModel
+import com.google.ai.client.generativeai.type.BlockThreshold
+import com.google.ai.client.generativeai.type.HarmCategory
+import com.google.ai.client.generativeai.type.RequestOptions
+import com.google.ai.client.generativeai.type.SafetySetting
+import com.google.ai.client.generativeai.type.ToolConfig
+import com.google.ai.client.generativeai.type.generationConfig
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import io.jadu.pages.BuildConfig
 import io.jadu.pages.data.dao.NotesDao
 import io.jadu.pages.data.dao.TodoDao
 import io.jadu.pages.data.local.NotesDatabase
 import io.jadu.pages.data.repository.NotesRepositoryImpl
+import io.jadu.pages.data.repository.OcrRepositoryImpl
 import io.jadu.pages.data.repository.TodoRepositoryImpl
 import io.jadu.pages.domain.repository.NotesRepository
+import io.jadu.pages.domain.repository.OcrRepository
 import io.jadu.pages.domain.repository.TodoRepository
 import io.jadu.pages.domain.usecase.AddNoteUseCase
 import io.jadu.pages.domain.usecase.DeleteNotesUseCase
+import io.jadu.pages.domain.usecase.GenerateTextUseCase
 import io.jadu.pages.domain.usecase.GetAllNotesUseCase
 import io.jadu.pages.domain.usecase.GetNotesPaginatedUseCase
 import io.jadu.pages.domain.usecase.SearchNoteUseCase
@@ -123,6 +134,38 @@ class AppModule {
     fun provideAllNotesUseCase(repository: NotesRepository): GetAllNotesUseCase {
         return GetAllNotesUseCase(repository)
     }
+
+    @Provides
+    fun provideUtils(): Utils = Utils()
+
+    @Provides
+    fun provideGenerativeModel(): GenerativeModel = GenerativeModel(
+        modelName = Constants.MODEL,
+        apiKey = BuildConfig.GEMINI_KEY,
+        generationConfig = generationConfig {
+            temperature = 0.15f
+            topK = 32
+            topP = 1f
+            maxOutputTokens = 4096
+        },
+        safetySettings = listOf(
+            SafetySetting(HarmCategory.HARASSMENT, BlockThreshold.NONE),
+            SafetySetting(HarmCategory.HATE_SPEECH, BlockThreshold.NONE),
+            SafetySetting(HarmCategory.SEXUALLY_EXPLICIT, BlockThreshold.NONE),
+            SafetySetting(HarmCategory.DANGEROUS_CONTENT, BlockThreshold.NONE),
+        ),
+
+    )
+
+    @Provides
+    fun provideContentRepository(
+        model: GenerativeModel,
+        utils: Utils
+    ): OcrRepository = OcrRepositoryImpl(model, utils)
+
+    @Provides
+    fun provideGenerateTextUseCase(repository: OcrRepository): GenerateTextUseCase =
+        GenerateTextUseCase(repository)
 
 
 

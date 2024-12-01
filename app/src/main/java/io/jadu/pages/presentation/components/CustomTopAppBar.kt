@@ -87,7 +87,7 @@ fun CustomTopAppBar(
                     )
                 }
 
-                IconButton(
+                /*IconButton(
                     onClick = {
                         onPinClick()
                     }
@@ -98,7 +98,7 @@ fun CustomTopAppBar(
                         modifier = Modifier.size(24.dp),
                         tint = MaterialTheme.colorScheme.onSurface
                     )
-                }
+                }*/
 
                 IconButton(
                     onClick = { onSaveClick() }
@@ -121,6 +121,20 @@ fun CustomTopAppBar(
                     expanded = isMenuExpanded,
                     onDismissRequest = { isMenuExpanded = false },
                 ) {
+                    DropdownMenuItem(
+                        text = {
+                            CustomMenuItem(
+                                title = "Pin",
+                                icons = if (isPinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        },
+                        onClick = {
+                            onPinClick()
+                            isMenuExpanded = false
+                        }
+                    )
+
                     DropdownMenuItem(
                         text = {
                             CustomMenuItem(

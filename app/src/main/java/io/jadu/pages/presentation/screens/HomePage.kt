@@ -278,7 +278,6 @@ fun HomePage(
             }
         }
         if (isSearching) {
-            Log.d("isSearchingxx", "isSearching: $isSearching")
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center

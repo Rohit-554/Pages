@@ -15,8 +15,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -24,7 +22,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -47,21 +44,10 @@ import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.unit.Dp
 import androidx.navigation.NavHostController
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.rememberAsyncImagePainter
-import com.google.ai.client.generativeai.GenerativeModel
-import com.google.ai.client.generativeai.type.BlockThreshold
-import com.google.ai.client.generativeai.type.HarmCategory
-import com.google.ai.client.generativeai.type.SafetySetting
-import com.google.ai.client.generativeai.type.content
-import com.google.ai.client.generativeai.type.generationConfig
-import io.jadu.pages.BuildConfig
-import io.jadu.pages.core.Constants
-import io.jadu.pages.core.Utils
 import io.jadu.pages.domain.model.Notes
 import io.jadu.pages.domain.model.PathProperties
 import io.jadu.pages.presentation.components.ColorPickerDialog
@@ -71,7 +57,6 @@ import io.jadu.pages.presentation.components.CustomSnackBar
 import io.jadu.pages.presentation.components.CustomTopAppBar
 import io.jadu.pages.presentation.components.EditPageBottomAppBar
 import io.jadu.pages.presentation.components.ImagePickerDialog
-import io.jadu.pages.presentation.components.SaveFab
 import io.jadu.pages.presentation.navigation.NavigationItem
 import io.jadu.pages.presentation.screens.parseColor
 import io.jadu.pages.presentation.viewmodel.NotesViewModel
@@ -111,11 +96,7 @@ fun AddNewPage(
     val isKeyboardOpen by keyboardAsState()
     var shouldScrollToBottom by remember { mutableStateOf(true) }
     var isNoteDeleteClicked by remember { mutableStateOf(false) }
-
-    val imeHeight = if (isKeyboardOpen) WindowInsets.Companion.ime.getBottom(LocalDensity.current) else 0
-
     var showImagePickerDialog by remember { mutableStateOf(false) }
-
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     val launcher = rememberLauncherForActivityResult(
         contract =
@@ -124,13 +105,12 @@ fun AddNewPage(
         Log.d("AddNewPage", "uri: $uri")
         imageUri = uri
     }
-
     var isLoading by remember { mutableStateOf(false) }
+    val uiState by viewModel.uiState
 
     LaunchedEffect(notesId, notes) {
         viewModel.onSearchTextChanged("")
         if (notesId != 0L) {
-            Log.d("AddNewPagexx", "notesId: $notesId")
             val note = notes.find { it.id == notesId }
             if (note != null) {
                 title = TextFieldValue(note.title)
@@ -209,48 +189,37 @@ fun AddNewPage(
         }
     }
 
-    val model = GenerativeModel(
-        modelName = Constants.MODEL,
-        apiKey = BuildConfig.GEMINI_KEY,
-        generationConfig = generationConfig {
-            temperature = 0.15f
-            topK = 32
-            topP = 1f
-            maxOutputTokens = 4096
-        },
-        safetySettings = listOf(
-            SafetySetting(HarmCategory.HARASSMENT, BlockThreshold.MEDIUM_AND_ABOVE),
-            SafetySetting(HarmCategory.HATE_SPEECH, BlockThreshold.MEDIUM_AND_ABOVE),
-            SafetySetting(HarmCategory.SEXUALLY_EXPLICIT, BlockThreshold.MEDIUM_AND_ABOVE),
-            SafetySetting(HarmCategory.DANGEROUS_CONTENT, BlockThreshold.MEDIUM_AND_ABOVE),
-        ),
-    )
-
     LaunchedEffect(imageUri) {
         if(imageUri!=null){
-            coroutineScope.launch {
-                isLoading = true
-                Log.d("AddNewPage", "response: $imageUri")
-                try{
-                    val response = model.generateContent(
-                        content {
-                            Utils().uriToBitmap(context, imageUri!!)?.let { image(it) }
-                            text("scan the texts in the image")
-                        }
-                    )
-                    Log.d("AddNewPage", "response: ${response.text}")
-                    if(response.text!=null){
-                        isLoading = false
-                    }
-                    description = response.text?.let { TextFieldValue(it) }!!
-                }catch (e: Exception) {
-                    isLoading = false
-                    Toast.makeText(context, "Something went wrong", Toast.LENGTH_SHORT).show()
-                }
-            }
+            viewModel.generateText(imageUri, context)
         }
     }
 
+    when (uiState) {
+        is UIState.IsIdle -> {
+            isLoading = false
+        }
+
+        is UIState.Loading -> {
+            isLoading = true
+        }
+
+        is UIState.Content -> {
+            val content = (uiState as UIState.Content<TextFieldValue>).data
+            Log.d("AddNewPage", "Content: ${content.text}")
+            description = TextFieldValue(content.text)
+            isLoading = false
+        }
+
+        is UIState.Error -> {
+            val errorMessage = (uiState as UIState.Error).message
+            Log.d("AddNewPage", "Error: $errorMessage")
+            Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+            isLoading = false
+        }
+
+        else -> {}
+    }
 
 
     Scaffold(containerColor = if (selectedColor != Black) selectedColor else MaterialTheme.colorScheme.background,
@@ -669,78 +638,16 @@ fun checkIfFieldEmpty(fieldKey: String): Boolean {
     return fieldKey.isEmpty()
 }
 
-//Used for combining - now need now
-sealed class CanvasItem {
-    data class ImageItem(val uri: Uri) : CanvasItem()
-    data class DrawingItem(val pathData: List<Pair<Path, PathProperties>>) : CanvasItem()
-}
-
-class PositionManager {
-
-    private val positions = HashMap<Int, PositionHandler>()
-    private lateinit var parent: LayoutCoordinates
-
-    var isParentSet = false
-        private set
-
-    private var currentHeight: Int = 0
-
-    private var scrollToConsumeForKeyboard: Float = 0F
-
-    fun setupParent(layoutCoordinates: LayoutCoordinates) {
-        parent = layoutCoordinates
-        if (parent.size.height != 0)
-            isParentSet = true
-    }
-
-    fun registerPosition(index: Int, positionHandler: PositionHandler) {
-        positions[index] = positionHandler
-    }
-
-    fun getScrollAmount(index: Int): Float {
-        return positions[index]?.calculateOffset(
-            scrollToConsumeForKeyboard,
-            parent,
-            scrollToConsumeForKeyboard == currentHeight.toFloat()
-        ) ?: 0F
-    }
-
-    fun setCurrentHeight(currentHeight: Int) {
-
-        scrollToConsumeForKeyboard =
-            if (this.currentHeight != 0 && currentHeight != 0 && this.currentHeight != currentHeight) {
-                (currentHeight - this.currentHeight).toFloat()
-            } else currentHeight.toFloat()
-
-        this.currentHeight = currentHeight
-    }
-
-
-}
-
 @Composable
 fun keyboardAsState(): State<Boolean> {
     val isImeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     return rememberUpdatedState(isImeVisible)
 }
 
-class PositionHandler(
-    layoutCoordinates: LayoutCoordinates,
-    private val paddingBottomPx: Float
-) {
 
-    private val bottom = layoutCoordinates.boundsInWindow().bottom
-
-    fun calculateOffset(
-        keyboardHeight: Float,
-        parent: LayoutCoordinates,
-        consumePadding: Boolean
-    ): Float {
-
-        val parentBottom = parent.boundsInWindow().bottom
-
-        val newBottom = parentBottom - keyboardHeight
-        return bottom - newBottom + if (consumePadding) paddingBottomPx else 0F
-    }
-
+sealed class UIState<out T> {
+    data object IsIdle : UIState<Nothing>()
+    data object Loading : UIState<Nothing>()
+    data class Content<T>(val data: T) : UIState<T>()
+    data class Error(val message: String) : UIState<Nothing>()
 }

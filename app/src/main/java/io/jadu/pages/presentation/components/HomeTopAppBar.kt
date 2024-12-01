@@ -108,19 +108,11 @@ fun HomeTopAppBar(
 
                     )
                 }
-
-
             }
         },
         actions = {
-
             if (isHome) {
-                IconButton(onClick = {
-                    onScanClick()
-                }) {
-                    Icon(imageVector = Icons.Filled.DocumentScanner, contentDescription = "Scan")
-                }
-               /* if (isSearchMode) {
+                /* if (isSearchMode) {
                     IconButton(onClick = {
                         isSearchMode = false
                         searchText = ""
@@ -137,6 +129,7 @@ fun HomeTopAppBar(
                     }
 
                 }*/
+
 
             }
             IconButton(onClick = onMenuClick) {

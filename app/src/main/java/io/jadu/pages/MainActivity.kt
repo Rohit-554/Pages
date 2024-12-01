@@ -138,6 +138,7 @@ fun AppNavHost(
                 drawPath = emptyList()
                 viewModel.clearImageUriList()
                 viewModel.removeNotesStates()
+                viewModel.clearState()
                 onDispose {}
             }
             NotesApp(navHostController, viewModel, todoViewModel, notes, shouldOpenTodoPage)
