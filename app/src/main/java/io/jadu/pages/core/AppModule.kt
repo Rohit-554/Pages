@@ -146,7 +146,7 @@ class AppModule {
             temperature = 0.15f
             topK = 32
             topP = 1f
-            maxOutputTokens = 4096
+            maxOutputTokens = 8192
         },
         safetySettings = listOf(
             SafetySetting(HarmCategory.HARASSMENT, BlockThreshold.NONE),
