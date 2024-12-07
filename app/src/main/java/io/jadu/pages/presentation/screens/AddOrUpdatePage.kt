@@ -48,6 +48,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.navigation.NavHostController
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.rememberAsyncImagePainter
+import com.mr0xf00.easycrop.rememberImageCropper
 import io.jadu.pages.domain.model.Notes
 import io.jadu.pages.domain.model.PathProperties
 import io.jadu.pages.presentation.components.ColorPickerDialog
@@ -98,15 +99,10 @@ fun AddNewPage(
     var isNoteDeleteClicked by remember { mutableStateOf(false) }
     var showImagePickerDialog by remember { mutableStateOf(false) }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
-    val launcher = rememberLauncherForActivityResult(
-        contract =
-        ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        Log.d("AddNewPage", "uri: $uri")
-        imageUri = uri
-    }
     var isLoading by remember { mutableStateOf(false) }
     val uiState by viewModel.uiState
+    val scannedText by viewModel.scannedText.collectAsState()
+    val imageCropper = rememberImageCropper()
 
     LaunchedEffect(notesId, notes) {
         viewModel.onSearchTextChanged("")
@@ -140,6 +136,12 @@ fun AddNewPage(
                 shouldScrollToBottom = false
                 scrollState.animateScrollTo(scrollState.maxValue)
             }
+        }
+    }
+
+    LaunchedEffect(scannedText) {
+        if(scannedText.isNotEmpty()){
+            description = TextFieldValue(scannedText)
         }
     }
 
@@ -205,9 +207,6 @@ fun AddNewPage(
         }
 
         is UIState.Content -> {
-            val content = (uiState as UIState.Content<TextFieldValue>).data
-            Log.d("AddNewPage", "Content: ${content.text}")
-            description = TextFieldValue(content.text)
             isLoading = false
         }
 

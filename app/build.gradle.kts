@@ -114,6 +114,9 @@ dependencies {
 
     //Gemini sdk
     implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
+    implementation("io.github.mr0xf00:easycrop:0.1.1")
+
+
 
 }
 

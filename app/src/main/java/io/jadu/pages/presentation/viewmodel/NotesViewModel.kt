@@ -15,6 +15,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.filter
+import com.mr0xf00.easycrop.ImageCropper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.jadu.pages.domain.model.Notes
 import io.jadu.pages.domain.model.PathProperties
@@ -80,6 +81,11 @@ class NotesViewModel @Inject constructor(
     private val _uiState = mutableStateOf<UIState<TextFieldValue>>(UIState.IsIdle)
     val uiState: State<UIState<TextFieldValue>> = _uiState
 
+    private val _scannedText = MutableStateFlow("")
+    val scannedText: StateFlow<String> get() = _scannedText
+
+    val imageCropper = ImageCropper()
+
 
     fun generateText(imageUri: Uri?, context: Context) {
         if (imageUri != null) {
@@ -87,13 +93,16 @@ class NotesViewModel @Inject constructor(
                 _uiState.value = UIState.Loading
                 try {
                     val text = generateTextUseCase(imageUri, context)
-                    if (text != null) {
+                    if(text!=null){
+                        _scannedText.value = text
                         _uiState.value = UIState.Content(TextFieldValue(text))
-                    } else {
+                    }else{
+                        _scannedText.value = ""
                         _uiState.value = UIState.Error("An error occurred: ${text}")
                     }
                 } catch (e: Exception) {
                     _uiState.value = UIState.Error("An error occurred: ${e.message}")
+                    _scannedText.value = ""
                 }
             }
         }
