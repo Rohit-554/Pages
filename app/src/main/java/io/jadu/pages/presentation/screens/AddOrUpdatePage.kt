@@ -15,8 +15,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -24,7 +22,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -36,6 +33,8 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.text.input.TextFieldValue
@@ -47,12 +46,17 @@ import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.unit.Dp
 import androidx.navigation.NavHostController
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.rememberAsyncImagePainter
+import com.mr0xf00.easycrop.CropError
+import com.mr0xf00.easycrop.CropResult
+import com.mr0xf00.easycrop.crop
+import com.mr0xf00.easycrop.images.ImageSrc
+import com.mr0xf00.easycrop.rememberImageCropper
+import com.mr0xf00.easycrop.ui.ImageCropperDialog
+import io.jadu.pages.core.Utils
 import io.jadu.pages.domain.model.Notes
 import io.jadu.pages.domain.model.PathProperties
 import io.jadu.pages.presentation.components.ColorPickerDialog
@@ -61,7 +65,7 @@ import io.jadu.pages.presentation.components.CustomInputFields
 import io.jadu.pages.presentation.components.CustomSnackBar
 import io.jadu.pages.presentation.components.CustomTopAppBar
 import io.jadu.pages.presentation.components.EditPageBottomAppBar
-import io.jadu.pages.presentation.components.SaveFab
+import io.jadu.pages.presentation.components.ImagePickerDialog
 import io.jadu.pages.presentation.navigation.NavigationItem
 import io.jadu.pages.presentation.screens.parseColor
 import io.jadu.pages.presentation.viewmodel.NotesViewModel
@@ -101,15 +105,19 @@ fun AddNewPage(
     val isKeyboardOpen by keyboardAsState()
     var shouldScrollToBottom by remember { mutableStateOf(true) }
     var isNoteDeleteClicked by remember { mutableStateOf(false) }
-
-    val imeHeight =
-        if (isKeyboardOpen) WindowInsets.Companion.ime.getBottom(LocalDensity.current) else 0
-
+    var showImagePickerDialog by remember { mutableStateOf(false) }
+    var imageUri by remember { mutableStateOf<Pair<Uri?, Long>?>(null to 0L) }
+    var isLoading by remember { mutableStateOf(false) }
+    val uiState by viewModel.uiState
+    val scannedText by viewModel.scannedText.collectAsState()
+    val imageCropper = rememberImageCropper()
+    val scope = rememberCoroutineScope()
+    val cropState = imageCropper.cropState
+    if (cropState != null) ImageCropperDialog(state = cropState)
 
     LaunchedEffect(notesId, notes) {
         viewModel.onSearchTextChanged("")
         if (notesId != 0L) {
-            Log.d("AddNewPagexx", "notesId: $notesId")
             val note = notes.find { it.id == notesId }
             if (note != null) {
                 title = TextFieldValue(note.title)
@@ -141,6 +149,13 @@ fun AddNewPage(
             }
         }
     }
+
+    LaunchedEffect(scannedText) {
+        if (scannedText.isNotEmpty()) {
+            description = TextFieldValue(description.text + "\n" + scannedText)
+        }
+    }
+
 
     val openDocumentLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenMultipleDocuments()
@@ -188,6 +203,60 @@ fun AddNewPage(
         }
     }
 
+    LaunchedEffect(imageUri) {
+        if (imageUri!!.first != null) {
+            scope.launch {
+                val result = Utils().uriToBitmap(context, imageUri!!.first!!)?.let {
+                    imageCropper.crop(
+                        bmp = it.asImageBitmap(),
+                    )
+                }
+
+                when (result) {
+                    CropResult.Cancelled -> {
+                        Toast.makeText(context, "Cancelled", Toast.LENGTH_SHORT).show()
+                    }
+                    is CropError -> {
+                        Toast.makeText(context, "Error: ${CropError.SavingError}", Toast.LENGTH_SHORT).show()
+                    }
+                    is CropResult.Success -> {
+                        val bmp = result.bitmap.asAndroidBitmap()
+                        Log.d("AddNewPage", "Image bmp: $bmp")
+                        val uri = Utils().convertBitmapToUri(context, bmp)
+                        Log.d("AddNewPage", "Image Uri: $uri")
+                        viewModel.generateText(uri, context)
+                    }
+
+                    null -> {
+                        Toast.makeText(context, "Image not found", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
+    }
+
+    when (uiState) {
+        is UIState.IsIdle -> {
+            isLoading = false
+        }
+
+        is UIState.Loading -> {
+            isLoading = true
+        }
+
+        is UIState.Content -> {
+            isLoading = false
+        }
+
+        is UIState.Error -> {
+            val errorMessage = (uiState as UIState.Error).message
+            Log.d("AddNewPage", "Error: $errorMessage")
+            Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+            isLoading = false
+        }
+
+        else -> {}
+    }
 
 
     Scaffold(containerColor = if (selectedColor != Black) selectedColor else MaterialTheme.colorScheme.background,
@@ -260,7 +329,11 @@ fun AddNewPage(
                         Toast.LENGTH_SHORT
                     ).show()
                 },
-                isPinned = isPinned
+                isPinned = isPinned,
+                onScanClick = {
+                    showImagePickerDialog = true
+                    //launcher.launch("image/*")
+                }
             )
         },
         floatingActionButton = {
@@ -303,6 +376,28 @@ fun AddNewPage(
             }
         },
         content = { padding ->
+
+            if (showImagePickerDialog) {
+                ImagePickerDialog(
+                    onImagePicked = { uri ->
+                        showImagePickerDialog = false
+                        imageUri = uri to System.currentTimeMillis()
+                    }
+                )
+            }
+
+            if (isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.5f))
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Color.White)
+                }
+            }
+
             Box(
                 modifier = Modifier
                     .padding(padding)
@@ -580,78 +675,16 @@ fun checkIfFieldEmpty(fieldKey: String): Boolean {
     return fieldKey.isEmpty()
 }
 
-//Used for combining - now need now
-sealed class CanvasItem {
-    data class ImageItem(val uri: Uri) : CanvasItem()
-    data class DrawingItem(val pathData: List<Pair<Path, PathProperties>>) : CanvasItem()
-}
-
-class PositionManager {
-
-    private val positions = HashMap<Int, PositionHandler>()
-    private lateinit var parent: LayoutCoordinates
-
-    var isParentSet = false
-        private set
-
-    private var currentHeight: Int = 0
-
-    private var scrollToConsumeForKeyboard: Float = 0F
-
-    fun setupParent(layoutCoordinates: LayoutCoordinates) {
-        parent = layoutCoordinates
-        if (parent.size.height != 0)
-            isParentSet = true
-    }
-
-    fun registerPosition(index: Int, positionHandler: PositionHandler) {
-        positions[index] = positionHandler
-    }
-
-    fun getScrollAmount(index: Int): Float {
-        return positions[index]?.calculateOffset(
-            scrollToConsumeForKeyboard,
-            parent,
-            scrollToConsumeForKeyboard == currentHeight.toFloat()
-        ) ?: 0F
-    }
-
-    fun setCurrentHeight(currentHeight: Int) {
-
-        scrollToConsumeForKeyboard =
-            if (this.currentHeight != 0 && currentHeight != 0 && this.currentHeight != currentHeight) {
-                (currentHeight - this.currentHeight).toFloat()
-            } else currentHeight.toFloat()
-
-        this.currentHeight = currentHeight
-    }
-
-
-}
-
 @Composable
 fun keyboardAsState(): State<Boolean> {
     val isImeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     return rememberUpdatedState(isImeVisible)
 }
 
-class PositionHandler(
-    layoutCoordinates: LayoutCoordinates,
-    private val paddingBottomPx: Float
-) {
 
-    private val bottom = layoutCoordinates.boundsInWindow().bottom
-
-    fun calculateOffset(
-        keyboardHeight: Float,
-        parent: LayoutCoordinates,
-        consumePadding: Boolean
-    ): Float {
-
-        val parentBottom = parent.boundsInWindow().bottom
-
-        val newBottom = parentBottom - keyboardHeight
-        return bottom - newBottom + if (consumePadding) paddingBottomPx else 0F
-    }
-
+sealed class UIState<out T> {
+    data object IsIdle : UIState<Nothing>()
+    data object Loading : UIState<Nothing>()
+    data class Content<T>(val data: T) : UIState<T>()
+    data class Error(val message: String) : UIState<Nothing>()
 }

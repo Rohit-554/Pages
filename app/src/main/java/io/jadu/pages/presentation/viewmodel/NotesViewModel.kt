@@ -1,27 +1,32 @@
 package io.jadu.pages.presentation.viewmodel
 
 
+import UIState
+import android.content.Context
 import android.net.Uri
 import android.util.Log
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.filter
-import androidx.paging.map
+import com.mr0xf00.easycrop.ImageCropper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.jadu.pages.domain.model.Notes
 import io.jadu.pages.domain.model.PathProperties
 import io.jadu.pages.domain.usecase.AddNoteUseCase
 import io.jadu.pages.domain.usecase.DeleteNotesUseCase
+import io.jadu.pages.domain.usecase.GenerateTextUseCase
 import io.jadu.pages.domain.usecase.GetAllNotesUseCase
 import io.jadu.pages.domain.usecase.GetNotesPaginatedUseCase
 import io.jadu.pages.domain.usecase.SearchNoteUseCase
 import io.jadu.pages.domain.usecase.UpdateNotesPositionUseCase
 import io.jadu.pages.domain.usecase.UpdateNotesUseCase
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -35,7 +40,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.Collections
 import javax.inject.Inject
 
 @HiltViewModel
@@ -46,7 +50,8 @@ class NotesViewModel @Inject constructor(
     private val getNotesPaginatedUseCase: GetNotesPaginatedUseCase,
     private val updateNotesPositionUseCase: UpdateNotesPositionUseCase,
     private val searchNotesUseCase: SearchNoteUseCase,
-    private val getAllNotesUseCase: GetAllNotesUseCase
+    private val getAllNotesUseCase: GetAllNotesUseCase,
+    private val generateTextUseCase: GenerateTextUseCase
 ) : ViewModel() {
 
     /* init {
@@ -73,7 +78,43 @@ class NotesViewModel @Inject constructor(
     private val _notesState = MutableStateFlow(NotesState())
     val notesState: StateFlow<NotesState> get() = _notesState
 
+    private val _uiState = mutableStateOf<UIState<TextFieldValue>>(UIState.IsIdle)
+    val uiState: State<UIState<TextFieldValue>> = _uiState
 
+    private val _scannedText = MutableStateFlow("")
+    val scannedText: StateFlow<String> get() = _scannedText
+
+    val imageCropper = ImageCropper()
+
+
+    fun generateText(imageUri: Uri?, context: Context) {
+        if (imageUri != null) {
+            viewModelScope.launch {
+                _uiState.value = UIState.Loading
+                try {
+                    val text = generateTextUseCase(imageUri, context)
+                    if(text!=null){
+                        _scannedText.value = text
+                        _uiState.value = UIState.Content(TextFieldValue(text))
+                    }else{
+                        _scannedText.value = ""
+                        _uiState.value = UIState.Error("An error occurred: ${text}")
+                    }
+                } catch (e: Exception) {
+                    _uiState.value = UIState.Error("An error occurred: ${e.message}")
+                    _scannedText.value = ""
+                }
+            }
+        }
+    }
+
+    fun clearScannedText() {
+        _scannedText.value = ""
+    }
+
+    fun clearState() {
+        _uiState.value = UIState.IsIdle
+    }
 
     val notes: Flow<List<Notes>>  = getAllNotesUseCase()
         .onEach { _isSearching.update { true } }
@@ -90,21 +131,22 @@ class NotesViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val notesFlow: Flow<PagingData<Notes>> = searchText
-        .debounce(300) // Debounce for smoother search experience
-        .distinctUntilChanged() // Avoid redundant recomputation for the same query
+        .debounce(300)
+        .distinctUntilChanged()
         .flatMapLatest { searchQuery ->
             getNotesPaginatedUseCase().map { pagingData ->
                 if (searchQuery.isBlank()) {
-                    pagingData // Return unfiltered data if the query is blank
+                    pagingData
                 } else {
                     pagingData.filter { note ->
-                        note.doesMatchSearchQuery(searchQuery) // Filter notes client-side
+                        note.doesMatchSearchQuery(searchQuery)
                     }
                 }
             }
         }
         .cachedIn(viewModelScope)
         .onEach { _isSearching.update { false } }
+
 
 
 
@@ -202,3 +244,4 @@ data class NotesState(
     val isPinned: Boolean = false,
     val shouldScroll: Boolean = false
 )
+

@@ -165,6 +165,7 @@ fun TodoPage(
         topBar = {
             HomeTopAppBar(
                 onSearchClick = {},
+                onScanClick = {},
                 onMenuClick = {
                     navHostController.navigate(NavigationItem.SettingsPage.route)
                 },

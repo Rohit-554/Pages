@@ -7,4 +7,5 @@ object Constants{
     val GET_IMAGE = "GET_IMAGE"
     val STARTING_KEY = 0
     val EMAIL = ""
+    val MODEL = "gemini-1.5-flash-001"
 }
