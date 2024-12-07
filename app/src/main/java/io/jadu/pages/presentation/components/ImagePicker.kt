@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -35,6 +37,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.FileProvider
+import io.jadu.pages.core.noRippleClickable
 import java.io.File
 
 
@@ -42,10 +45,12 @@ import java.io.File
 fun ImagePickerDialog(onImagePicked: (Uri?) -> Unit) {
     val context = LocalContext.current
 
+    // Create a URI for the camera image
     val cameraImageUri = remember {
         createImageUri(context)
     }
 
+    // Camera launcher
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
@@ -54,6 +59,7 @@ fun ImagePickerDialog(onImagePicked: (Uri?) -> Unit) {
         }
     }
 
+    // Gallery launcher
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -63,77 +69,86 @@ fun ImagePickerDialog(onImagePicked: (Uri?) -> Unit) {
     Dialog(onDismissRequest = { onImagePicked(null) }) {
         Surface(
             shape = MaterialTheme.shapes.medium,
-            color = MaterialTheme.colorScheme.surface,
+            color = MaterialTheme.colorScheme.surfaceBright,
             tonalElevation = 4.dp
         ) {
-            Column(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // Title
-                Text(
-                    text = "Choose Image",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-
-                // Row with Camera and Gallery options
-                Row(
+            Column {
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Camera option
-                    Box(
+                    // Row with Camera and Gallery options
+                    Row(
                         modifier = Modifier
-                            .size(64.dp)
-                            .border(2.dp, MaterialTheme.colorScheme.primary, shape = CircleShape)
-                            .padding(12.dp)
-                            .clickable {
-                                if (cameraImageUri != null) {
-                                    cameraLauncher.launch(cameraImageUri)
-                                }
-                            },
-                        contentAlignment = Alignment.Center
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.CameraAlt,
-                            contentDescription = "Camera Icon",
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
+                        // Camera option
+                        Box(
+                            modifier = Modifier
+                                .size(64.dp)
+                                .border(
+                                    2.dp,
+                                    MaterialTheme.colorScheme.outlineVariant,
+                                    shape = CircleShape
+                                )
+                                .padding(12.dp)
+                                .noRippleClickable {
+                                    if (cameraImageUri != null) {
+                                        cameraLauncher.launch(cameraImageUri)
+                                    }
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CameraAlt,
+                                contentDescription = "Camera Icon",
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
 
-                    // Gallery option
-                    Box(
-                        modifier = Modifier
-                            .size(64.dp)
-                            .border(2.dp, MaterialTheme.colorScheme.primary, shape = CircleShape)
-                            .padding(12.dp)
-                            .clickable {
-                                galleryLauncher.launch("image/*")
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.PhotoLibrary,
-                            contentDescription = "Gallery Icon",
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
+                        // Spacer to add some space between the icons
+                        Spacer(modifier = Modifier.size(32.dp))
 
-                // Cancel button
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    TextButton(onClick = { onImagePicked(null) }) {
-                        Text("Cancel")
+                        // Gallery option
+                        Box(
+                            modifier = Modifier
+                                .size(64.dp)
+                                .border(
+                                    2.dp,
+                                    MaterialTheme.colorScheme.outlineVariant,
+                                    shape = CircleShape
+                                )
+                                .padding(12.dp)
+                                .noRippleClickable {
+                                    galleryLauncher.launch("image/*")
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.PhotoLibrary,
+                                contentDescription = "Gallery Icon",
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
                     }
+                    HorizontalDivider()
+                    Spacer(modifier = Modifier.size(8.dp))
+                    Text(
+                        text = "Note : Donot Upload any sensitive information",
+                        style = TextStyle(
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontFamily = MaterialTheme.typography.bodyLarge.fontFamily,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                        ),
+                        modifier = Modifier.align(Alignment.Start)
+                    )
+
+
                 }
             }
         }
@@ -141,12 +156,12 @@ fun ImagePickerDialog(onImagePicked: (Uri?) -> Unit) {
 }
 
 
+
 fun createImageUri(context: Context): Uri? {
-    // Create a temporary file in the cache directory
     val tempFile = File.createTempFile(
-        "temp_image_${System.currentTimeMillis()}", // Prefix for file name
-        ".jpg",                                    // Suffix (file extension)
-        context.cacheDir                          // Location: Cache directory
+        "temp_image_${System.currentTimeMillis()}",
+        ".jpg",
+        context.cacheDir
     )
 
     return FileProvider.getUriForFile(

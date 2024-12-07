@@ -108,6 +108,10 @@ class NotesViewModel @Inject constructor(
         }
     }
 
+    fun clearScannedText() {
+        _scannedText.value = ""
+    }
+
     fun clearState() {
         _uiState.value = UIState.IsIdle
     }

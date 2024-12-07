@@ -139,6 +139,7 @@ fun AppNavHost(
                 viewModel.clearImageUriList()
                 viewModel.removeNotesStates()
                 viewModel.clearState()
+                viewModel.clearScannedText()
                 onDispose {}
             }
             NotesApp(navHostController, viewModel, todoViewModel, notes, shouldOpenTodoPage)

@@ -33,6 +33,8 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.text.input.TextFieldValue
@@ -48,7 +50,13 @@ import androidx.compose.ui.text.TextStyle
 import androidx.navigation.NavHostController
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.rememberAsyncImagePainter
+import com.mr0xf00.easycrop.CropError
+import com.mr0xf00.easycrop.CropResult
+import com.mr0xf00.easycrop.crop
+import com.mr0xf00.easycrop.images.ImageSrc
 import com.mr0xf00.easycrop.rememberImageCropper
+import com.mr0xf00.easycrop.ui.ImageCropperDialog
+import io.jadu.pages.core.Utils
 import io.jadu.pages.domain.model.Notes
 import io.jadu.pages.domain.model.PathProperties
 import io.jadu.pages.presentation.components.ColorPickerDialog
@@ -98,11 +106,14 @@ fun AddNewPage(
     var shouldScrollToBottom by remember { mutableStateOf(true) }
     var isNoteDeleteClicked by remember { mutableStateOf(false) }
     var showImagePickerDialog by remember { mutableStateOf(false) }
-    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    var imageUri by remember { mutableStateOf<Pair<Uri?, Long>?>(null to 0L) }
     var isLoading by remember { mutableStateOf(false) }
     val uiState by viewModel.uiState
     val scannedText by viewModel.scannedText.collectAsState()
     val imageCropper = rememberImageCropper()
+    val scope = rememberCoroutineScope()
+    val cropState = imageCropper.cropState
+    if (cropState != null) ImageCropperDialog(state = cropState)
 
     LaunchedEffect(notesId, notes) {
         viewModel.onSearchTextChanged("")
@@ -140,10 +151,11 @@ fun AddNewPage(
     }
 
     LaunchedEffect(scannedText) {
-        if(scannedText.isNotEmpty()){
-            description = TextFieldValue(scannedText)
+        if (scannedText.isNotEmpty()) {
+            description = TextFieldValue(description.text + "\n" + scannedText)
         }
     }
+
 
     val openDocumentLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenMultipleDocuments()
@@ -192,8 +204,34 @@ fun AddNewPage(
     }
 
     LaunchedEffect(imageUri) {
-        if(imageUri!=null){
-            viewModel.generateText(imageUri, context)
+        if (imageUri!!.first != null) {
+            scope.launch {
+                val result = Utils().uriToBitmap(context, imageUri!!.first!!)?.let {
+                    imageCropper.crop(
+                        bmp = it.asImageBitmap(),
+                    )
+                }
+
+                when (result) {
+                    CropResult.Cancelled -> {
+                        Toast.makeText(context, "Cancelled", Toast.LENGTH_SHORT).show()
+                    }
+                    is CropError -> {
+                        Toast.makeText(context, "Error: ${CropError.SavingError}", Toast.LENGTH_SHORT).show()
+                    }
+                    is CropResult.Success -> {
+                        val bmp = result.bitmap.asAndroidBitmap()
+                        Log.d("AddNewPage", "Image bmp: $bmp")
+                        val uri = Utils().convertBitmapToUri(context, bmp)
+                        Log.d("AddNewPage", "Image Uri: $uri")
+                        viewModel.generateText(uri, context)
+                    }
+
+                    null -> {
+                        Toast.makeText(context, "Image not found", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
         }
     }
 
@@ -343,12 +381,12 @@ fun AddNewPage(
                 ImagePickerDialog(
                     onImagePicked = { uri ->
                         showImagePickerDialog = false
-                        imageUri = uri
+                        imageUri = uri to System.currentTimeMillis()
                     }
                 )
             }
 
-            if(isLoading){
+            if (isLoading) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
