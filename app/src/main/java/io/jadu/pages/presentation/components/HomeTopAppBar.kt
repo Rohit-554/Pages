@@ -6,12 +6,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DocumentScanner
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -22,6 +24,14 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.ai.client.generativeai.GenerativeModel
+
+import com.google.ai.client.generativeai.type.BlockThreshold
+import com.google.ai.client.generativeai.type.HarmCategory
+import com.google.ai.client.generativeai.type.SafetySetting
+import com.google.ai.client.generativeai.type.content
+import com.google.ai.client.generativeai.type.generationConfig
+import io.jadu.pages.BuildConfig
 import io.jadu.pages.core.PreferencesManager
 import io.jadu.pages.ui.theme.White
 
@@ -33,6 +43,7 @@ fun HomeTopAppBar(
     onSearchTextChange: (String) -> Unit,
     title: String = "Hi Rohit!",
     isHome: Boolean = true,
+    onScanClick: () -> Unit,
     scrollBehavior: TopAppBarScrollBehavior,
 ) {
     var isSearchMode by remember { mutableStateOf(false) }
@@ -41,6 +52,7 @@ fun HomeTopAppBar(
     val context = LocalContext.current
     val preferencesManager = remember { PreferencesManager(context) }
     val name by remember { mutableStateOf(preferencesManager.getName() ?: "") }
+    val scope = rememberCoroutineScope()
     LaunchedEffect(isSearchMode) {
         if (isSearchMode) {
             focusRequester.requestFocus()
@@ -96,16 +108,11 @@ fun HomeTopAppBar(
 
                     )
                 }
-
-
             }
         },
         actions = {
-            IconButton(onClick = onMenuClick) {
-                Icon(imageVector = Icons.Filled.Settings, contentDescription = "Menu")
-            }
             if (isHome) {
-               /* if (isSearchMode) {
+                /* if (isSearchMode) {
                     IconButton(onClick = {
                         isSearchMode = false
                         searchText = ""
@@ -123,6 +130,10 @@ fun HomeTopAppBar(
 
                 }*/
 
+
+            }
+            IconButton(onClick = onMenuClick) {
+                Icon(imageVector = Icons.Filled.Settings, contentDescription = "Menu")
             }
         },
         scrollBehavior = scrollBehavior

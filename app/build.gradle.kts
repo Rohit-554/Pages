@@ -24,6 +24,8 @@ android {
         val properties = Properties()
         properties.load(rootProject.file("local.properties").inputStream())
         buildConfigField("String","EMAIL", "\"${properties.getProperty("EMAIL")}\"")
+        //GEMINI API KEY
+        buildConfigField("String","GEMINI_KEY", "\"${properties.getProperty("GEMINI_KEY")}\"")
     }
 
     buildTypes {
@@ -109,6 +111,12 @@ dependencies {
     implementation ("androidx.glance:glance-material3:1.1.0")
     implementation("androidx.work:work-runtime-ktx:$work_version")
     implementation ("com.github.1902shubh:SendMail:1.0.0")
+
+    //Gemini sdk
+    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
+    implementation("io.github.mr0xf00:easycrop:0.1.1")
+
+
 
 }
 

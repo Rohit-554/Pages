@@ -3,6 +3,7 @@ package io.jadu.pages.core
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -22,6 +23,7 @@ import androidx.core.content.FileProvider
 import io.jadu.pages.domain.model.PathProperties
 import java.io.File
 import java.io.FileOutputStream
+import java.io.InputStream
 
 class Utils {
     fun colorToHex(color: Color, includeAlpha: Boolean = false): String {
@@ -110,6 +112,45 @@ class Utils {
                 "${context.packageName}.provider", // FileProvider authority defined in the manifest
                 imageFile
             )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    fun convertBitmapToUri(context: Context, bitmap: Bitmap): Uri? {
+        return try {
+            // Create a temporary file in the cache directory
+            val tempFile = File.createTempFile(
+                "temp_image_${System.currentTimeMillis()}", // File prefix
+                ".jpg",                                    // File extension
+                context.cacheDir                          // Directory: Cache
+            )
+
+            // Write the bitmap to the file
+            val outputStream = FileOutputStream(tempFile)
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream) // Compress to JPEG
+            outputStream.flush()
+            outputStream.close()
+
+            // Return a content URI for the file using FileProvider
+            FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider", // Match authority in manifest
+                tempFile
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    fun uriToBitmap(context: Context, uri: Uri): Bitmap? {
+        return try {
+            val inputStream: InputStream? = context.contentResolver.openInputStream(uri)
+            BitmapFactory.decodeStream(inputStream).also {
+                inputStream?.close()
+            }
         } catch (e: Exception) {
             e.printStackTrace()
             null

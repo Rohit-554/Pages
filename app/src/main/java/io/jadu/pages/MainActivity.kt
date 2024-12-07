@@ -138,6 +138,8 @@ fun AppNavHost(
                 drawPath = emptyList()
                 viewModel.clearImageUriList()
                 viewModel.removeNotesStates()
+                viewModel.clearState()
+                viewModel.clearScannedText()
                 onDispose {}
             }
             NotesApp(navHostController, viewModel, todoViewModel, notes, shouldOpenTodoPage)
@@ -214,13 +216,15 @@ fun AppNavHost(
 
     // Use this snippet in a debug mode to inspect your back stack.
 
-
-
-    if (!isIntroScreen) {
-        navHostController.navigate(NavigationItem.IntroPagerScreen.route)
-    } else {
-        navHostController.navigate(NavigationItem.Home.route) {
-            popUpTo(NavigationItem.IntroPagerScreen.route) { inclusive = true }
+    LaunchedEffect(Unit) {
+        if (!isIntroScreen) {
+            Log.d("AppNavHost", "Navigating to IntroPagerScreen")
+            navHostController.navigate(NavigationItem.IntroPagerScreen.route)
+        } else {
+            Log.d("AppNavHost", "Navigating to Home")
+            navHostController.navigate(NavigationItem.Home.route) {
+                popUpTo(NavigationItem.IntroPagerScreen.route) { inclusive = true }
+            }
         }
     }
 
