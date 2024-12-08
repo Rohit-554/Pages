@@ -77,6 +77,7 @@ import io.jadu.pages.presentation.screens.introScreens.IntroPager
 import io.jadu.pages.presentation.screens.introScreens.IntroScreenOne
 import io.jadu.pages.presentation.screens.introScreens.IntroScreenTwo
 import io.jadu.pages.presentation.viewmodel.NotesViewModel
+import io.jadu.pages.presentation.viewmodel.NotificationViewModel
 import io.jadu.pages.presentation.viewmodel.TodoViewModel
 import io.jadu.pages.ui.theme.PagesTheme
 

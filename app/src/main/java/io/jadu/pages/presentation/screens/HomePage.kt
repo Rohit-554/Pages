@@ -1,6 +1,11 @@
 package io.jadu.pages.presentation.screens
 
+import android.Manifest.permission.POST_NOTIFICATIONS
+import android.Manifest.permission.READ_MEDIA_IMAGES
+import android.Manifest.permission.READ_MEDIA_VIDEO
+import android.Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED
 import android.net.Uri
+import android.os.Build
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -66,6 +71,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -90,6 +96,7 @@ import io.jadu.pages.presentation.components.HomeTopAppBar
 import io.jadu.pages.presentation.components.NoteCard
 import io.jadu.pages.presentation.navigation.NavigationItem
 import io.jadu.pages.presentation.viewmodel.NotesViewModel
+import io.jadu.pages.presentation.viewmodel.NotificationViewModel
 import io.jadu.pages.ui.theme.ButtonBlue
 import kotlinx.coroutines.android.awaitFrame
 import kotlinx.coroutines.delay
@@ -131,7 +138,7 @@ fun HomePage(
         multipleSelectedForDelete = selectedNotes.isNotEmpty()
     }
     var isBearTouched by remember { mutableStateOf(false) }
-
+    val notificationViewModel: NotificationViewModel = hiltViewModel()
     LaunchedEffect(Unit) {
         delay(2000)
         isLoading = false
@@ -143,6 +150,36 @@ fun HomePage(
             viewModel.deleteNotes(note.id)
         }
         selectedNotes.clear()
+    }
+
+
+
+    val requestPermissions = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { results ->
+        if (results.values.all { it }) {
+               notificationViewModel.scheduleDailyNotification(context)
+        } else {
+            Toast.makeText(
+                context,
+                "Permissions denied, please grant to access media files",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        notificationViewModel.scheduleDailyNotification(context)
+    }
+
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requestPermissions.launch(
+                arrayOf(
+                   POST_NOTIFICATIONS
+                )
+            )
+        }
     }
 
     Scaffold(
