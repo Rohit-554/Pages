@@ -109,7 +109,7 @@ class Utils {
 
             FileProvider.getUriForFile(
                 context,
-                "${context.packageName}.provider", // FileProvider authority defined in the manifest
+                "${context.packageName}.fileprovider", // FileProvider authority defined in the manifest
                 imageFile
             )
         } catch (e: Exception) {

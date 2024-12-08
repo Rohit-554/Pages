@@ -205,6 +205,7 @@ fun AppNavHost(
                             "drawing${System.currentTimeMillis()}.png"
                         )
                     }
+                    Log.d("ImageUri", "ImageUri: $uri")
                     if (uri != null) {
                         viewModel.addImageUris(uri)
                     }
