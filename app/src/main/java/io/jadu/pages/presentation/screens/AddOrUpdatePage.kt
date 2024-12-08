@@ -250,8 +250,8 @@ fun AddNewPage(
 
         is UIState.Error -> {
             val errorMessage = (uiState as UIState.Error).message
-            Log.d("AddNewPage", "Error: $errorMessage")
-            Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Something Went Wrong", Toast.LENGTH_SHORT).show()
+            viewModel.clearState()
             isLoading = false
         }
 
