@@ -111,7 +111,6 @@ fun NotificationsPage(navHostController: NavHostController) {
                             text = "Yayy,You're all set",
                             style = TextStyle(
                                 fontFamily = MaterialTheme.typography.bodyLarge.fontFamily,
-                                fontSize = MaterialTheme.typography.titleLarge.fontSize
                             ),
                             color = MaterialTheme.colorScheme.onSurface,
                             textAlign = TextAlign.Center
@@ -122,7 +121,7 @@ fun NotificationsPage(navHostController: NavHostController) {
                             Modifier.padding(start = 4.dp),
                             style = TextStyle(
                                 fontFamily = MaterialTheme.typography.bodyLarge.fontFamily,
-                                fontSize = MaterialTheme.typography.titleLarge.fontSize
+                                fontSize = MaterialTheme.typography.titleSmall.fontSize
                             ),
                             color = MaterialTheme.colorScheme.onSurface,
                             textAlign = TextAlign.Center
