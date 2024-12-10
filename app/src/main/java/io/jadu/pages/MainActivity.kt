@@ -70,6 +70,7 @@ import io.jadu.pages.presentation.home_widget.ThemeChangeReceiver
 import io.jadu.pages.presentation.navigation.NavigationItem
 import io.jadu.pages.presentation.screens.AboutPage
 import io.jadu.pages.presentation.screens.HomePage
+import io.jadu.pages.presentation.screens.NotificationsPage
 import io.jadu.pages.presentation.screens.SettingsPage
 import io.jadu.pages.presentation.screens.TodoPage
 import io.jadu.pages.presentation.screens.draw.DrawingApp
@@ -192,6 +193,11 @@ fun AppNavHost(
 
         composable(NavigationItem.IntroScreenOne.route){
             IntroScreenOne(PagerState { 0 })
+        }
+
+        composable(NavigationItem.NotificationsPage.route) {
+           // val notificationViewModel: NotificationViewModel = hiltViewModel()
+            NotificationsPage(navHostController)
         }
 
         composable(NavigationItem.DrawPage.route) {

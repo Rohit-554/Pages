@@ -71,6 +71,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.NotificationManagerCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.paging.LoadState
@@ -133,13 +134,18 @@ fun HomePage(
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.sleepingbear))
     val lottieComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.bear))
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+    var isNotificationClicked by remember { mutableStateOf(false) }
+
+
     LaunchedEffect(selectedNotes) {
         onCardSelected(selectedNotes.isNotEmpty())
         multipleSelectedForDelete = selectedNotes.isNotEmpty()
     }
     var isBearTouched by remember { mutableStateOf(false) }
     val notificationViewModel: NotificationViewModel = hiltViewModel()
+
     LaunchedEffect(Unit) {
+
         delay(2000)
         isLoading = false
     }
@@ -158,13 +164,7 @@ fun HomePage(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { results ->
         if (results.values.all { it }) {
-               notificationViewModel.scheduleDailyNotification(context)
-        } else {
-            Toast.makeText(
-                context,
-                "Permissions denied, please grant to access media files",
-                Toast.LENGTH_SHORT
-            ).show()
+            notificationViewModel.scheduleDailyNotification(context)
         }
     }
 
@@ -231,6 +231,9 @@ fun HomePage(
                         viewModel.onSearchTextChanged(searchText)
                     },
                     scrollBehavior = scrollBehavior,
+                    onNotificationClick = {
+                        navHostController.navigate(NavigationItem.NotificationsPage.route)
+                    }
                 )
             }
         },

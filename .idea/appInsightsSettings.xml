@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="io.jadu.pages" />
+                  <option name="mobileSdkAppId" value="1:362785170949:android:05c0bdcb59f59f1ee15e6c" />
+                  <option name="projectId" value="pages-46c66" />
+                  <option name="projectNumber" value="362785170949" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

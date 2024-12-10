@@ -7,7 +7,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DocumentScanner
+import androidx.compose.material.icons.filled.NotificationImportant
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.NotificationsNone
+import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.NotificationsActive
+import androidx.compose.material.icons.outlined.NotificationsOff
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -24,6 +30,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.NotificationManagerCompat
 import com.google.ai.client.generativeai.GenerativeModel
 
 import com.google.ai.client.generativeai.type.BlockThreshold
@@ -44,6 +51,7 @@ fun HomeTopAppBar(
     title: String = "Hi Rohit!",
     isHome: Boolean = true,
     onScanClick: () -> Unit,
+    onNotificationClick : () -> Unit,
     scrollBehavior: TopAppBarScrollBehavior,
 ) {
     var isSearchMode by remember { mutableStateOf(false) }
@@ -53,6 +61,13 @@ fun HomeTopAppBar(
     val preferencesManager = remember { PreferencesManager(context) }
     val name by remember { mutableStateOf(preferencesManager.getName() ?: "") }
     val scope = rememberCoroutineScope()
+    var isNotificationBannerVisible by remember { mutableStateOf(false) }
+
+    LaunchedEffect (Unit){
+        val notificationManagerCompat = NotificationManagerCompat.from(context)
+        isNotificationBannerVisible = !notificationManagerCompat.areNotificationsEnabled()
+    }
+
     LaunchedEffect(isSearchMode) {
         if (isSearchMode) {
             focusRequester.requestFocus()
@@ -129,9 +144,14 @@ fun HomeTopAppBar(
                     }
 
                 }*/
-
-
+                IconButton(onClick = onNotificationClick) {
+                    Icon(
+                        imageVector =  if (isNotificationBannerVisible) Icons.Outlined.NotificationsActive else Icons.Outlined.NotificationsOff,
+                        contentDescription = "Menu")
+                }
             }
+
+
             IconButton(onClick = onMenuClick) {
                 Icon(imageVector = Icons.Filled.Settings, contentDescription = "Menu")
             }

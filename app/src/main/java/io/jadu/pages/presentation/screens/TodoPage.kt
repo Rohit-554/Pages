@@ -172,7 +172,8 @@ fun TodoPage(
                 onSearchTextChange = { searchText -> },
                 title = "To-dos",
                 isHome = false,
-                scrollBehavior = scrollBehavior
+                scrollBehavior = scrollBehavior,
+                onNotificationClick = {}
             )
         },
         contentWindowInsets = WindowInsets(
