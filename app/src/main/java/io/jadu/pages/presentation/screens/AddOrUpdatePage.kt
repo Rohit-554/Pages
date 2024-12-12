@@ -281,7 +281,8 @@ fun AddNewPage(
                         color = if (selectedColor != defaultColor) selectedColor.toString() else null,
                         imageUri = selectedImageUriList,
                         drawingPaths = null,
-                        isPinned = isPinned
+                        isPinned = isPinned,
+                        isNoteSaved = true
                     )
                     if (notesId != 0L && notesId != null) {
                         viewModel.updateNotes(
@@ -291,7 +292,8 @@ fun AddNewPage(
                             notesId = notesId,
                             drawingPaths = null,
                             color = if (selectedColor != defaultColor) selectedColor.toString() else null,
-                            isPinned = isPinned
+                            isPinned = isPinned,
+                            isNotesSaved = true
                         )
                         Toast.makeText(context, "Updated Successfully", Toast.LENGTH_SHORT).show()
                         coroutineScope.launch {

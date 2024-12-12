@@ -192,7 +192,8 @@ class NotesViewModel @Inject constructor(
         drawingPaths: List<List<Pair<Path, PathProperties>>>?,
         notesId: Long,
         color: String?,
-        isPinned: Boolean
+        isPinned: Boolean,
+        isNotesSaved: Boolean = false
     ) = viewModelScope.launch {
         updateNotesUseCase.invoke(
             title,
@@ -201,7 +202,8 @@ class NotesViewModel @Inject constructor(
             drawingPaths,
             notesId,
             color,
-            isPinned
+            isPinned,
+            isNotesSaved
         )
         //getNotesPaginated(10, 0)
     }

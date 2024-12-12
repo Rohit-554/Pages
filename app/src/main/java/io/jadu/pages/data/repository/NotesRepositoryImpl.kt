@@ -14,12 +14,12 @@ import javax.inject.Inject
 
 class NotesRepositoryImpl @Inject constructor(
     private val notesDao: NotesDao
-): NotesRepository {
+) : NotesRepository {
 
     override fun getNotesPaginated(): Flow<PagingData<Notes>> {
         return Pager(
             config = PagingConfig(
-                pageSize = 8   ,
+                pageSize = 8,
                 enablePlaceholders = false
             ),
             pagingSourceFactory = { notesDao.getNotesPaginated() }
@@ -30,8 +30,17 @@ class NotesRepositoryImpl @Inject constructor(
         notesDao.addNotes(note)
     }
 
-    override suspend fun updateNotes(title:String, description: String?, imageUri: List<Uri>?, drawingPaths: List<List<Pair<Path, PathProperties>>>? , notesId: Long, color:String?, isPinned:Boolean) {
-        notesDao.updateNotes(notesId, title, description, imageUri, drawingPaths, color, isPinned)
+    override suspend fun updateNotes(
+        title: String,
+        description: String?,
+        imageUri: List<Uri>?,
+        drawingPaths: List<List<Pair<Path, PathProperties>>>?,
+        notesId: Long,
+        color: String?,
+        isPinned: Boolean,
+        isNoteSaved: Boolean
+    ) {
+        notesDao.updateNotes(notesId, title, description, imageUri, drawingPaths, color, isPinned, isNoteSaved)
     }
 
     override suspend fun deleteNotes(noteId: Long) {
