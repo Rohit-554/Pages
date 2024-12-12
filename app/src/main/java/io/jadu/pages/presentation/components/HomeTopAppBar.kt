@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsNone
 import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Drafts
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.NotificationsOff
 import androidx.compose.runtime.Composable
@@ -52,6 +53,7 @@ fun HomeTopAppBar(
     isHome: Boolean = true,
     onScanClick: () -> Unit,
     onNotificationClick : () -> Unit,
+    onDraftClick: () -> Unit,
     scrollBehavior: TopAppBarScrollBehavior,
 ) {
     var isSearchMode by remember { mutableStateOf(false) }
@@ -126,6 +128,11 @@ fun HomeTopAppBar(
             }
         },
         actions = {
+            IconButton(onClick = onDraftClick) {
+                Icon(
+                    imageVector =  Icons.Outlined.Drafts,
+                    contentDescription = "Menu")
+            }
             if (isHome) {
                 /* if (isSearchMode) {
                     IconButton(onClick = {
@@ -150,7 +157,6 @@ fun HomeTopAppBar(
                         contentDescription = "Menu")
                 }
             }
-
 
             IconButton(onClick = onMenuClick) {
                 Icon(imageVector = Icons.Filled.Settings, contentDescription = "Menu")

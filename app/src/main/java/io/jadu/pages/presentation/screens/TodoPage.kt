@@ -173,7 +173,10 @@ fun TodoPage(
                 title = "To-dos",
                 isHome = false,
                 scrollBehavior = scrollBehavior,
-                onNotificationClick = {}
+                onNotificationClick = {},
+                onDraftClick = {
+                    navHostController.navigate(NavigationItem.DraftsPage.route)
+                }
             )
         },
         contentWindowInsets = WindowInsets(

@@ -93,6 +93,7 @@ import io.jadu.pages.core.noRippleClickable
 import io.jadu.pages.domain.model.Notes
 import io.jadu.pages.presentation.components.CustomDialog
 import io.jadu.pages.presentation.components.CustomFab
+import io.jadu.pages.presentation.components.CustomTopAppBar
 import io.jadu.pages.presentation.components.HomeTopAppBar
 import io.jadu.pages.presentation.components.NoteCard
 import io.jadu.pages.presentation.navigation.NavigationItem
@@ -111,6 +112,7 @@ fun HomePage(
     navHostController: NavHostController,
     onCardSelected: (Boolean) -> Unit,
     note: List<Notes>,
+    isDraftsPage: Boolean = false
 ) {
     val context = LocalContext.current
     // val notes = viewModel.notes.collectAsState(initial = emptyList()).value
@@ -128,10 +130,13 @@ fun HomePage(
     val coroutineScope = rememberCoroutineScope()
     val isDeletePressed = remember { mutableStateOf(false) }
     val pagingNotes = viewModel.notesFlow.collectAsLazyPagingItems()
-    val notes = pagingNotes.itemSnapshotList.items
+    val notes = if (!isDraftsPage) pagingNotes.itemSnapshotList.items.filter { it.isNoteSaved } else pagingNotes.itemSnapshotList.items.filter { !it.isNoteSaved }
     val isSearchedClicked = remember { mutableStateOf(false) }
     val isSearching by viewModel.isSearching.collectAsState()
-    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.sleepingbear))
+    val composition by rememberLottieComposition(
+        if (!isDraftsPage) LottieCompositionSpec.RawRes(R.raw.sleepingbear)
+        else LottieCompositionSpec.RawRes(R.raw.rabbit)
+    )
     val lottieComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.bear))
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     var isNotificationClicked by remember { mutableStateOf(false) }
@@ -145,7 +150,6 @@ fun HomePage(
     val notificationViewModel: NotificationViewModel = hiltViewModel()
 
     LaunchedEffect(Unit) {
-
         delay(2000)
         isLoading = false
     }
@@ -157,7 +161,6 @@ fun HomePage(
         }
         selectedNotes.clear()
     }
-
 
 
     val requestPermissions = rememberLauncherForActivityResult(
@@ -176,11 +179,13 @@ fun HomePage(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             requestPermissions.launch(
                 arrayOf(
-                   POST_NOTIFICATIONS
+                    POST_NOTIFICATIONS
                 )
             )
         }
     }
+
+    /// This composable is used for both drafts and home page - be aware xD
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -218,7 +223,7 @@ fun HomePage(
                         }
                     }
                 )
-            } else {
+            } else if (!isDraftsPage) {
                 HomeTopAppBar(
                     onSearchClick = {
                         isSearchedClicked.value = true
@@ -233,7 +238,15 @@ fun HomePage(
                     scrollBehavior = scrollBehavior,
                     onNotificationClick = {
                         navHostController.navigate(NavigationItem.NotificationsPage.route)
+                    },
+                    onDraftClick = {
+                        navHostController.navigate(NavigationItem.DraftsPage.route)
                     }
+                )
+            } else {
+                CustomTopAppBar(
+                    title = "Drafts",
+                    navHostController = navHostController
                 )
             }
         },
@@ -246,32 +259,34 @@ fun HomePage(
                 if (selectedNotes.isNotEmpty()) {
                     multipleSelectedForDelete = true
                     val allSelectedPinned = selectedNotes.all { it.isPinned }
-                    CustomFab(
-                        onClick = {
-                            selectedNotes.forEach { note ->
-                                viewModel.updateNotes(
-                                    note.title,
-                                    note.description,
-                                    note.imageUri,
-                                    note.drawingPaths,
-                                    note.id,
-                                    note.color,
-                                    !allSelectedPinned
-                                )
-                            }
-                            selectedNotes.clear()
-                            multipleSelectedForDelete = false
-                            Toast.makeText(
-                                context,
-                                if (allSelectedPinned) "Unpinned Successfully" else "Pinned Sucessfully",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        },
-                        icon = if (allSelectedPinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
-                        contentDescription = "Pinned notes",
-                        backgroundColor = MaterialTheme.colorScheme.onSurface,
-                        tintColor = Color.Black
-                    )
+                    if(!isDraftsPage){
+                        CustomFab(
+                            onClick = {
+                                selectedNotes.forEach { note ->
+                                    viewModel.updateNotes(
+                                        note.title,
+                                        note.description,
+                                        note.imageUri,
+                                        note.drawingPaths,
+                                        note.id,
+                                        note.color,
+                                        !allSelectedPinned
+                                    )
+                                }
+                                selectedNotes.clear()
+                                multipleSelectedForDelete = false
+                                Toast.makeText(
+                                    context,
+                                    if (allSelectedPinned) "Unpinned Successfully" else "Pinned Sucessfully",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            },
+                            icon = if (allSelectedPinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
+                            contentDescription = "Pinned notes",
+                            backgroundColor = MaterialTheme.colorScheme.onSurface,
+                            tintColor = Color.Black
+                        )
+                    }
                     CustomFab(
                         onClick = {
                             isDeletePressed.value = true
@@ -281,7 +296,7 @@ fun HomePage(
                         backgroundColor = MaterialTheme.colorScheme.onSurface,
                         tintColor = MaterialTheme.colorScheme.errorContainer
                     )
-                } else {
+                } else if (!isDraftsPage) {
                     CustomFab(
                         onClick = { navHostController.navigate(NavigationItem.CreateNotes.route) },
                         icon = Icons.Default.Add,
@@ -305,6 +320,8 @@ fun HomePage(
                     )
                 }
             }
+
+
         }
     ) { innerPadding ->
         if (isMenuExpanded) {
@@ -418,22 +435,39 @@ fun HomePage(
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        if (isBearTouched) {
-                            LottieAnimation(
-                                lottieComposition,
-                                isPlaying = true,
-                                iterations = LottieConstants.IterateForever,
-                                modifier = Modifier
-                                    .size(250.dp)
-                                    .noRippleClickable {
-                                        isBearTouched = false
-                                    }
-                            )
-                            LottieSection(
-                                text1 = "I warned you !",
-                                text2 = "Now, Touch him again to make him sleep"
-                            )
-                        } else {
+                        if(!isDraftsPage){
+                            if (isBearTouched) {
+                                LottieAnimation(
+                                    lottieComposition,
+                                    isPlaying = true,
+                                    iterations = LottieConstants.IterateForever,
+                                    modifier = Modifier
+                                        .size(250.dp)
+                                        .noRippleClickable {
+                                            isBearTouched = false
+                                        }
+                                )
+                                LottieSection(
+                                    text1 = "I warned you !",
+                                    text2 = "Now, Touch him again to make him sleep"
+                                )
+                            } else {
+                                LottieAnimation(
+                                    composition,
+                                    isPlaying = true,
+                                    iterations = LottieConstants.IterateForever,
+                                    modifier = Modifier
+                                        .size(300.dp)
+                                        .noRippleClickable {
+                                            isBearTouched = true
+                                        }
+                                )
+                                LottieSection(
+                                    text1 = "Nothing found here!",
+                                    text2 = "& Beware of Bear! don't touch him"
+                                )
+                            }
+                        }else{
                             LottieAnimation(
                                 composition,
                                 isPlaying = true,
@@ -445,10 +479,11 @@ fun HomePage(
                                     }
                             )
                             LottieSection(
-                                text1 = "Nothing found here!",
-                                text2 = "& Beware of Bear! don't touch him"
+                                text1 = "Ah! Rabbit here",
+                                text2 = "Might be hiding something"
                             )
                         }
+
                     }
                 }
             }

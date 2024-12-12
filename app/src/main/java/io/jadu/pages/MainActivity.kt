@@ -69,6 +69,7 @@ import io.jadu.pages.presentation.components.BottomNavigationBar
 import io.jadu.pages.presentation.home_widget.ThemeChangeReceiver
 import io.jadu.pages.presentation.navigation.NavigationItem
 import io.jadu.pages.presentation.screens.AboutPage
+import io.jadu.pages.presentation.screens.DraftsPage
 import io.jadu.pages.presentation.screens.HomePage
 import io.jadu.pages.presentation.screens.NotificationsPage
 import io.jadu.pages.presentation.screens.SettingsPage
@@ -78,7 +79,6 @@ import io.jadu.pages.presentation.screens.introScreens.IntroPager
 import io.jadu.pages.presentation.screens.introScreens.IntroScreenOne
 import io.jadu.pages.presentation.screens.introScreens.IntroScreenTwo
 import io.jadu.pages.presentation.viewmodel.NotesViewModel
-import io.jadu.pages.presentation.viewmodel.NotificationViewModel
 import io.jadu.pages.presentation.viewmodel.TodoViewModel
 import io.jadu.pages.ui.theme.PagesTheme
 
@@ -198,6 +198,10 @@ fun AppNavHost(
         composable(NavigationItem.NotificationsPage.route) {
            // val notificationViewModel: NotificationViewModel = hiltViewModel()
             NotificationsPage(navHostController)
+        }
+
+        composable(NavigationItem.DraftsPage.route) {
+            DraftsPage(navHostController, viewModel)
         }
 
         composable(NavigationItem.DrawPage.route) {

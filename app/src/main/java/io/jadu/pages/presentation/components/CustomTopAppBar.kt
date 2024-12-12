@@ -50,7 +50,8 @@ fun CustomTopAppBar(
     onDeleteClick: () -> Unit = {},
     onPinClick : () -> Unit = {},
     onScanClick: () -> Unit = {},
-    isPinned: Boolean = false
+    isPinned: Boolean = false,
+    isBackPressed: (Boolean) -> Unit = { _ -> }
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
     var isPinnedClicked by remember { mutableStateOf(isPinned) }
@@ -66,7 +67,10 @@ fun CustomTopAppBar(
             )
         },
         navigationIcon = {
-            IconButton(onClick = { navHostController.popBackStack() }) {
+            IconButton(onClick = {
+                isBackPressed(true)
+                navHostController.popBackStack()
+            }) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back"

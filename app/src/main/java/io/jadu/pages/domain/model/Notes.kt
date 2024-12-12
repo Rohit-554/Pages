@@ -19,6 +19,7 @@ data class Notes(
     var drawingPaths: List<List<Pair<Path, PathProperties>>>? = null,
     var isPinned: Boolean = false,
     var date: Long = System.currentTimeMillis(),
+    var isNoteSaved: Boolean = true,
     var color: String? = null
 ){
     fun doesMatchSearchQuery(searchText: String): Boolean {
