@@ -19,8 +19,23 @@ class NotificationRepositoryImpl : NotificationRepository {
         "Scanned and saved—your papers are now part of the digital VIP club!",
         "Look at you, turning paper chaos into organized bliss!",
         "Psst... Your notes miss you! Come back and give them some love.",
-        "Ideas don’t wait! Open the app and jot them down before they vanish."
+        "Ideas don’t wait! Open the app and jot them down before they vanish.",
+        "Your notes are like pizza toppings—customize them however you like!",
+        "Another note? You’re on fire! (But don’t burn out.)",
+        "Congratulations! You just gave your idea a digital passport.",
+        "Your notes just got a glow-up. They’re basically celebrities now.",
+        "Oops! That note is gone. But hey, you’re still awesome!",
+        "Note app to brain: ‘Tag, you’re it!’ Time to share your ideas.",
+        "If notes were gold, you’d be a billionaire by now. Keep going!",
+        "You just saved a note. Somewhere, an idea fairy is doing a happy dance.",
+        "Deleting notes like a ninja! Stealthy, but effective.",
+        "Your app is now officially a vault of brilliance. Don’t lose the key!",
+        "Note updated! It’s like a makeover, but for ideas.",
+        "Your thoughts just went VIP. They’re now part of the elite note club!",
+        "Who needs a memory palace when you’ve got this app? Write it down!",
+        "Your ideas deserve a standing ovation. Keep the creativity coming!"
     )
+
 
     override fun getDailyNotificationContent(): String {
         return messages.random()

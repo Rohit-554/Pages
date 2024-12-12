@@ -172,7 +172,11 @@ fun TodoPage(
                 onSearchTextChange = { searchText -> },
                 title = "To-dos",
                 isHome = false,
-                scrollBehavior = scrollBehavior
+                scrollBehavior = scrollBehavior,
+                onNotificationClick = {},
+                onDraftClick = {
+                    navHostController.navigate(NavigationItem.DraftsPage.route)
+                }
             )
         },
         contentWindowInsets = WindowInsets(

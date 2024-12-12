@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Build
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
@@ -71,6 +72,7 @@ import io.jadu.pages.presentation.screens.parseColor
 import io.jadu.pages.presentation.viewmodel.NotesViewModel
 import io.jadu.pages.ui.theme.Black
 import io.jadu.pages.ui.theme.LightGray
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -92,7 +94,6 @@ fun AddNewPage(
     val notes = pagingNotes.itemSnapshotList.items
     val toolBarText = if (notesId != 0L) "Update Note" else "Add New Note"
     val defaultColor = MaterialTheme.colorScheme.background
-
     var title by remember { mutableStateOf(TextFieldValue("")) }
     var description by remember { mutableStateOf(TextFieldValue("")) }
     var selectedColor by remember { mutableStateOf(defaultColor) }
@@ -114,6 +115,7 @@ fun AddNewPage(
     val scope = rememberCoroutineScope()
     val cropState = imageCropper.cropState
     if (cropState != null) ImageCropperDialog(state = cropState)
+    var isBackPressed by remember { mutableStateOf(false) }
 
     LaunchedEffect(notesId, notes) {
         viewModel.onSearchTextChanged("")
@@ -333,6 +335,9 @@ fun AddNewPage(
                 onScanClick = {
                     showImagePickerDialog = true
                     //launcher.launch("image/*")
+                },
+                isBackPressed = {
+                        isBackPressed = it
                 }
             )
         },
@@ -515,6 +520,99 @@ fun AddNewPage(
                 isError = areFieldEmpty
             )
         })
+
+    BackHandler {
+        /*if (title.text.trim().isEmpty()) {
+            Toast.makeText(context, "Title cannot be empty", Toast.LENGTH_SHORT).show()
+            return@BackHandler
+        }*/
+
+
+        handleBackPress(
+            title = title,
+            description = description,
+            selectedImageUriList = selectedImageUriList,
+            drawPath = drawPath,
+            selectedColor = selectedColor,
+            defaultColor = defaultColor,
+            isPinned = isPinned,
+            notesId = notesId,
+            viewModel = viewModel,
+            coroutineScope = coroutineScope,
+            navHostController = navHostController,
+            isbackHandler = true
+        )
+
+    }
+
+    if(isBackPressed){
+        handleBackPress(
+            title = title,
+            description = description,
+            selectedImageUriList = selectedImageUriList,
+            drawPath = drawPath,
+            selectedColor = selectedColor,
+            defaultColor = defaultColor,
+            isPinned = isPinned,
+            notesId = notesId,
+            viewModel = viewModel,
+            coroutineScope = coroutineScope,
+            navHostController = navHostController
+        )
+        isBackPressed = false
+    }
+
+}
+
+fun handleBackPress(
+    title: TextFieldValue,
+    description: TextFieldValue,
+    selectedImageUriList: List<Uri>,
+    drawPath: List<Pair<Path, PathProperties>>,
+    selectedColor: Color,
+    defaultColor: Color,
+    isPinned: Boolean,
+    notesId: Long?,
+    viewModel: NotesViewModel,
+    coroutineScope: CoroutineScope,
+    navHostController: NavHostController,
+    isbackHandler: Boolean = false
+) {
+    if (title.text.trim().isNotEmpty() || description.text.trim().isNotEmpty() || selectedImageUriList.isNotEmpty() || drawPath.isNotEmpty()) {
+        val newNote = Notes(
+            id = System.currentTimeMillis(),
+            title = title.text.trim(),
+            description = description.text.trim(),
+            color = if (selectedColor != defaultColor) selectedColor.toString() else null,
+            imageUri = selectedImageUriList,
+            drawingPaths = null,
+            isPinned = isPinned,
+            isNoteSaved = false
+        )
+
+        coroutineScope.launch {
+            withContext(Dispatchers.Main) {
+                if (notesId != 0L && notesId != null) {
+                    viewModel.updateNotes(
+                        title = newNote.title,
+                        description = newNote.description,
+                        imageUri = newNote.imageUri,
+                        notesId = notesId,
+                        drawingPaths = newNote.drawingPaths,
+                        color = newNote.color,
+                        isPinned = newNote.isPinned
+                    )
+                    Toast.makeText(navHostController.context, "Updated Successfully", Toast.LENGTH_SHORT).show()
+                } else {
+                    viewModel.addNotes(newNote)
+                    Toast.makeText(navHostController.context, "Draft Saved Successfully", Toast.LENGTH_SHORT).show()
+                }
+                if(isbackHandler) navHostController.popBackStack()
+            }
+        }
+    } else {
+        if(isbackHandler) navHostController.popBackStack()
+    }
 }
 
 fun updateNote(

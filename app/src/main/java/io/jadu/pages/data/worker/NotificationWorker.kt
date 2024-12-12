@@ -31,12 +31,11 @@ class NotificationWorker(
         )
 
         val notification = NotificationCompat.Builder(applicationContext, "daily_notification_channel")
-            .setContentTitle("Daily Reminder")
             .setContentText(content)
             .setSmallIcon(R.drawable.baseline_book_24)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setContentIntent(pendingIntent) // Set the pending intent
-            .setAutoCancel(true) // Remove the notification when tapped
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
             .build()
 
         val notificationManager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager

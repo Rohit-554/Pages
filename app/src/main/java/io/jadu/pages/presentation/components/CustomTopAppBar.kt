@@ -25,6 +25,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,7 +50,8 @@ fun CustomTopAppBar(
     onDeleteClick: () -> Unit = {},
     onPinClick : () -> Unit = {},
     onScanClick: () -> Unit = {},
-    isPinned: Boolean = false
+    isPinned: Boolean = false,
+    isBackPressed: (Boolean) -> Unit = { _ -> }
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
     var isPinnedClicked by remember { mutableStateOf(isPinned) }
@@ -65,7 +67,10 @@ fun CustomTopAppBar(
             )
         },
         navigationIcon = {
-            IconButton(onClick = { navHostController.popBackStack() }) {
+            IconButton(onClick = {
+                isBackPressed(true)
+                navHostController.popBackStack()
+            }) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back"
@@ -163,7 +168,10 @@ fun CustomTopAppBar(
                     )
                 }
             }
-        }
+        },
+
+
+
     )
 }
 

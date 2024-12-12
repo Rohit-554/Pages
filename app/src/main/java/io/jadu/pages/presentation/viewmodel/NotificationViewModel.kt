@@ -1,6 +1,9 @@
 package io.jadu.pages.presentation.viewmodel
 
 import android.content.Context
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
+import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.ViewModel
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
@@ -14,6 +17,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class NotificationViewModel @Inject constructor() : ViewModel() {
+
+    private val _isNotificationBannerVisible = mutableStateOf(false)
+    val isNotificationBannerVisible: State<Boolean> = _isNotificationBannerVisible
 
     fun scheduleDailyNotification(context: Context) {
         val workRequest = PeriodicWorkRequestBuilder<NotificationWorker>(24, TimeUnit.HOURS)
@@ -47,4 +53,15 @@ class NotificationViewModel @Inject constructor() : ViewModel() {
         val delay = randomTime - currentTime.timeInMillis
         return if (delay > 0) delay else TimeUnit.DAYS.toMillis(1) + delay
     }
+
+    fun checkNotificationPermission(context: Context) {
+        val notificationManagerCompat = NotificationManagerCompat.from(context)
+        _isNotificationBannerVisible.value = !notificationManagerCompat.areNotificationsEnabled()
+    }
+
+    fun dismissNotificationBanner() {
+        _isNotificationBannerVisible.value = false
+    }
+
+
 }
