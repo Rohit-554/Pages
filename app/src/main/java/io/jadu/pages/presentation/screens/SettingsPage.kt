@@ -4,9 +4,12 @@ import android.Manifest.permission.READ_EXTERNAL_STORAGE
 import android.Manifest.permission.READ_MEDIA_IMAGES
 import android.Manifest.permission.READ_MEDIA_VIDEO
 import android.Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.util.Base64
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -52,6 +55,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -69,25 +73,85 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.GetCredentialResponse
+import androidx.credentials.exceptions.GetCredentialException
 import androidx.navigation.NavHostController
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.rememberAsyncImagePainter
-import io.jadu.pages.BuildConfig
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
+import com.google.firebase.Firebase
+import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.auth
 import io.jadu.pages.R
 import io.jadu.pages.core.Constants
 import io.jadu.pages.core.PreferencesManager
 import io.jadu.pages.presentation.components.CustomTopAppBar
 import io.jadu.pages.presentation.components.InfoCard
 import io.jadu.pages.presentation.components.TextFieldDialogue
-import io.jadu.pages.presentation.components.sendEmail
 import io.jadu.pages.presentation.navigation.NavigationItem
 import io.jadu.pages.presentation.viewmodel.NotesViewModel
 import io.jadu.pages.presentation.viewmodel.TodoViewModel
 import io.jadu.pages.ui.theme.TickColor
 import io.jadu.pages.ui.theme.White
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
+import java.security.SecureRandom
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+
+val TAG = "SettingsPage"
+fun handleSignIn(result: GetCredentialResponse, scope: CoroutineScope, context:Context) {
+    // Handle the successfully returned credential.
+    when (val credential = result.credential) {
+        is CustomCredential -> {
+            if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+                try {
+                    val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+                    val googleTokenId = googleIdTokenCredential.idToken
+                    val authCredential = GoogleAuthProvider.getCredential(googleTokenId, null)
+                    scope.launch {
+                       val user = Firebase.auth.signInWithCredential(authCredential).await().user
+                        user?.let {
+                            if(it.isAnonymous.not()){
+                                withContext(Dispatchers.Main){
+                                    Toast.makeText(context, "Sign in successful", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+                    }
+
+                    Log.d(TAG, "Received google id token: ${googleIdTokenCredential.id}")
+
+
+                } catch (e: GoogleIdTokenParsingException) {
+                    Log.e(TAG, "Received an invalid google id token response", e)
+                }
+            } else {
+                Log.e(TAG, "Unexpected type of credential")
+            }
+        }
+
+        else -> {
+            Log.e(TAG, "Unexpected type of credential")
+        }
+    }
+}
+
+fun generateNonce(): String {
+    val bytes = ByteArray(16)
+    SecureRandom().nextBytes(bytes)
+    return Base64.encodeToString(bytes, Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)
+}
 
 
 @Composable
@@ -122,12 +186,13 @@ fun SettingsPage(
     val todoSize =
         todoViewModel.getAllTodo.collectAsState(initial = emptyList()).value.filter { !it.isTaskCompleted }.size
     val isFeedback = remember { mutableStateOf(false) }
-
+    val scope = rememberCoroutineScope()
     LaunchedEffect(isEditing) {
         if (isEditing) {
             focusRequester.requestFocus()
         }
     }
+
 
     val openDocumentLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
@@ -143,6 +208,24 @@ fun SettingsPage(
         }
     }
 
+    val googleIdOption: GetGoogleIdOption = GetGoogleIdOption.Builder()
+        .setFilterByAuthorizedAccounts(true)
+        .setServerClientId("362785170949-4c4m2eekvelfa1f8bk0lhlai962gkoj2.apps.googleusercontent.com")
+        .setAutoSelectEnabled(true)
+        .setNonce("")
+    .build()
+
+    val signInWithGoogleOption: GetSignInWithGoogleOption = GetSignInWithGoogleOption.Builder(
+        "362785170949-qketo5dlbtftq2h8pb2ikfaoigmi4m7m.apps.googleusercontent.com")
+    .build()
+
+    val request: GetCredentialRequest = GetCredentialRequest.Builder()
+        .addCredentialOption(signInWithGoogleOption)
+        .build()
+
+    val credentialManager = CredentialManager.create(context)
+
+
     val requestPermissions =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
             val deniedPermissions = results.filter { !it.value }
@@ -157,6 +240,14 @@ fun SettingsPage(
                 openDocumentLauncher.launch(arrayOf("image/*"))
             }
         }
+
+
+    /*val googleIdOption:GetGoogleIdOption = GetGoogleIdOption.Builder()
+        .setFilterByAuthorizedAccounts(true)
+        .setServerClientId(WEB_CLIENT_ID)
+        .setAutoSelectEnabled(true)
+        .setNonce("")
+    .build()*/
 
     Scaffold(
         topBar = {
@@ -457,6 +548,19 @@ fun SettingsPage(
                                     Box(
                                         modifier = Modifier
                                             .weight(1f)
+                                            .clickable {
+                                                scope.launch {
+                                                    try {
+                                                        val result = credentialManager.getCredential(
+                                                            request = request,
+                                                            context = context,
+                                                        )
+                                                        handleSignIn(result,scope, context)
+                                                    } catch (e: GetCredentialException) {
+                                                        Log.e(TAG, "Error getting credential", e)
+                                                    }
+                                                }
+                                            }
                                             .fillMaxHeight(),
                                         contentAlignment = Alignment.Center
                                     ) {
