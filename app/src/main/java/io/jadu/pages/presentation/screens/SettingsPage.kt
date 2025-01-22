@@ -242,13 +242,6 @@ fun SettingsPage(
         }
 
 
-    /*val googleIdOption:GetGoogleIdOption = GetGoogleIdOption.Builder()
-        .setFilterByAuthorizedAccounts(true)
-        .setServerClientId(WEB_CLIENT_ID)
-        .setAutoSelectEnabled(true)
-        .setNonce("")
-    .build()*/
-
     Scaffold(
         topBar = {
             CustomTopAppBar(

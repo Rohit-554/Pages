@@ -182,7 +182,7 @@ object TodoWidget : GlanceAppWidget() {
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
-                                text = "${todos.size} TO-DOs",
+                                text = "${todos.size} " + if (todos.size == 1) "TO-DO" else "TO-DOs",
                                 style = TextStyle(
                                     color = MyAppWidgetGlanceColorScheme.colors.onSurface,
                                     fontSize = 12.sp,
