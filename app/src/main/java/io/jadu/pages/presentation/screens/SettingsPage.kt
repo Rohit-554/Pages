@@ -550,7 +550,7 @@ fun SettingsPage(
                                                         )
                                                         handleSignIn(result,scope, context)
                                                     } catch (e: GetCredentialException) {
-                                                        Log.e(TAG, "Error getting credential", e)
+                                                        Log.e(TAG, "Error getting credential, check it", e)
                                                     }
                                                 }
                                             }
