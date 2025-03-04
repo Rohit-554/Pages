@@ -4,6 +4,7 @@ import android.Manifest.permission.READ_EXTERNAL_STORAGE
 import android.Manifest.permission.READ_MEDIA_IMAGES
 import android.Manifest.permission.READ_MEDIA_VIDEO
 import android.Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -16,6 +17,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -46,6 +48,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -154,6 +158,7 @@ fun generateNonce(): String {
 }
 
 
+@SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun SettingsPage(
     navHostController: NavHostController,
@@ -171,7 +176,7 @@ fun SettingsPage(
             preferencesManager.getString(Constants.GET_IMAGE) ?: ""
         )
     }
-
+    var isGoogleSignInEnabled by remember { mutableStateOf(false) }
     var previousName by remember { mutableStateOf(name) }
     var isEditing by remember { mutableStateOf(false) }
     var toastShown by remember { mutableStateOf(false) }
@@ -541,19 +546,6 @@ fun SettingsPage(
                                     Box(
                                         modifier = Modifier
                                             .weight(1f)
-                                            .clickable {
-                                                scope.launch {
-                                                    try {
-                                                        val result = credentialManager.getCredential(
-                                                            request = request,
-                                                            context = context,
-                                                        )
-                                                        handleSignIn(result,scope, context)
-                                                    } catch (e: GetCredentialException) {
-                                                        Log.e(TAG, "Error getting credential, check it", e)
-                                                    }
-                                                }
-                                            }
                                             .fillMaxHeight(),
                                         contentAlignment = Alignment.Center
                                     ) {
@@ -594,6 +586,14 @@ fun SettingsPage(
                         }
 
                         Spacer(modifier = Modifier.height(16.dp))
+                        GSignSwitchComp(
+                            title = "Enable Drive Sync",
+                            subtitle = "Sign in with Google to sync your notes",
+                            isChecked = isGoogleSignInEnabled,
+                            onCheckedChange = {
+                                isGoogleSignInEnabled = it
+                            }
+                        )
                         BorderButton(navHostController, "About Us", onClick = {
                             navHostController.navigate(NavigationItem.AboutPage.route)
                         }, subtitle = "Know more about us")
@@ -625,6 +625,20 @@ fun SettingsPage(
                 },
                 isFeedbackClicked = isFeedback.value
             )
+        }
+    }
+
+    if (isGoogleSignInEnabled) {
+        LaunchedEffect(Unit) {
+            try {
+                val result = credentialManager.getCredential(
+                    request = request,
+                    context = context,
+                )
+                handleSignIn(result, scope, context)
+            } catch (e: GetCredentialException) {
+                Log.e(TAG, "Error getting credential, check it", e)
+            }
         }
     }
 }
@@ -687,6 +701,54 @@ private fun BorderButton(
 
     }
 }
+
+@Composable
+private fun GSignSwitchComp(
+    title: String,
+    subtitle: String,
+    isChecked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant,
+                shape = RoundedCornerShape(8.dp)
+            )
+            .padding(16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(text = title, style = MaterialTheme.typography.bodyLarge)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = subtitle,
+                    style = TextStyle(
+                        fontFamily = MaterialTheme.typography.bodyMedium.fontFamily,
+                        color = Color.Gray
+                    )
+                )
+            }
+            Switch(
+                checked = isChecked,
+                onCheckedChange = onCheckedChange,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = MaterialTheme.colorScheme.onSurface,
+                    uncheckedThumbColor = MaterialTheme.colorScheme.onSurface,
+                    checkedTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                )
+            )
+        }
+    }
+}
+
 
 fun Long.toFormattedDate(): String {
     val date = Date(this)
